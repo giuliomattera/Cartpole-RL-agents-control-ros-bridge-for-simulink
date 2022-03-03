@@ -12,3 +12,5 @@ Project is created with:
 * Simulink folder : you can found all simulink models
 * rl_connections : ROS module with the agent definition and nodes
 
+## How launch
+
