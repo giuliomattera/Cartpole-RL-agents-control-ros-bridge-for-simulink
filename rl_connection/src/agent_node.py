@@ -2,8 +2,7 @@
 import rospy
 import tensorflow as tf
 import numpy as np
-from std_msgs.msg import Float32
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32, Float32MultiArray, Bool
 
 class DDPG():
 
@@ -63,10 +62,10 @@ class DDPG():
         action = tf.expand_dims(action, 0)
         action = tf.convert_to_tensor(action, dtype=tf.float32)
 
-        next_action = tf.expand_dims(next_action, 0)
+        next_action = tf.expand_dims(np.float32(next_action), 0)
         next_action = tf.convert_to_tensor(next_action, dtype=tf.float32)
 
-        reward = tf.expand_dims(reward, 0)
+        reward = tf.expand_dims(np.float32(reward), 0)
         reward = tf.convert_to_tensor(reward, dtype=tf.float32)
 
         with tf.GradientTape() as gradient:
@@ -131,12 +130,16 @@ def reward_callback(reward_msg):
     r = reward_msg.data
     #print('[INFO] Recieved a reward: ', r)
 
+def done_callback(done_msg):
+    global done
+    done = done_msg.data
+    
 if __name__ == '__main__':
     try:
 
         ''' Initialiaze agent'''
         agents = DDPG()
-        agents.num_states = 4
+        agents.num_states = 1
         agents.num_actions = 1
         agents.max_effort = 10
         agents.scale_effort = 1
@@ -157,29 +160,42 @@ if __name__ == '__main__':
         #Initialize agent node
         s0 = np.zeros((1, agents.num_states), dtype =np.float32)
         a0 = np.array(0, dtype = np.float32)
-        r = 0
-        TS = 1e-4 #set same time step in simulink
+        r = np.array(0, dtype = np.float32)
+        done = False
+        TS = 1e-2 #set same time step in simulink
 
         rospy.init_node('Agent')
         pub = rospy.Publisher('agent_action', Float32, queue_size=10)
         i = 0
         states = []
         actions = []
-
+        total_trajectory = []
         while rospy.is_shutdown() == False:
             rospy.Subscriber("state", Float32MultiArray, state_callback)
             rospy.Subscriber("reward", Float32, reward_callback)
-            if i < 2:
-                states.append(s0)
-                actions.append(a0)
-                i = i +1
+            rospy.Subscriber('is_done', Bool, done_callback)
+            if done == False:
+                if i < 2:
+                    states.append(s0)
+                    actions.append(a0)
+                    i = i +1
+                else:
+                    traj = np.array([states[0], actions[0], states[1], actions[1], r])
+                    total_trajectory.append(traj)
+                    states = []
+                    actions = []
+                    i = 0
+                rospy.sleep(TS)
             else:
-                print(' [s0,s1] = ', states)
-                print(' [a0,a1] = ', actions)
-                states = []
-                actions = []
-                i = 0
-            rospy.sleep(TS)
+                print('Goal is reached or episode is finish. Stopping simulation...')
+                trajcetories = np.array(total_trajectory)
+                for i in range(trajcetories.shape[0]):
+                    print('Learning from sample ', i)
+                    print(trajcetories[i][0],trajcetories[i][1], trajcetories[i][4], trajcetories[i][2], trajcetories[i][3])
+                    aloss, closs = agents.update(trajcetories[i][0],trajcetories[i][1], trajcetories[i][4], trajcetories[i][2], trajcetories[i][3] )
+                    print('Actor loss: ', aloss.numpy())
+                    print('Critic loss: ', closs.numpy())
+                break;
 
     except rospy.ROSInterruptException:
         pass
