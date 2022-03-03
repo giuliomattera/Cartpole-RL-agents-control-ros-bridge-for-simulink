@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-
 import rospy
 import tensorflow as tf
 import numpy as np
 from std_msgs.msg import Float32
 from std_msgs.msg import Float32MultiArray
-
 
 class DDPG():
 
@@ -56,11 +54,12 @@ class DDPG():
         return tf.keras.Model([state_input, action_input], outputs)
 
     def update(self, state, action, reward, next_state, next_action):
+        #state = tf.expand_dims(state, 0)
         state = tf.convert_to_tensor(state, dtype=tf.float32)
 
+        #next_state = tf.expand_dims(next_state, 0)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
-        
-        # Action is a float. Expand is needed
+
         action = tf.expand_dims(action, 0)
         action = tf.convert_to_tensor(action, dtype=tf.float32)
 
@@ -87,6 +86,12 @@ class DDPG():
         with tf.GradientTape() as gradient:
             action = actor_model(state, training=True)
 
+            # Add random noise to search in action space
+            #search_noise = self.mu + self.std*np.random.random(self.num_actions)
+            #search_noise = tf.convert_to_tensor(search_noise, dtype=tf.float32)
+
+            #action = tf.math.add(action, search_noise)
+
             critic_q = critic_model([state, action], training=True)
             actor_loss = -tf.math.reduce_mean(critic_q)
 
@@ -112,21 +117,23 @@ def agent_out(agent, actor_model, state):
     a0 = np.clip(a.numpy(), -agents.max_effort, agents.max_effort)
     return a0
 
-def state_callback(state):
+def state_callback(state_msg):
+    global s0, a0
     action = Float32()
-    io = state.data[0]
-    print('[INFO] Recvieved a state from simulink. ', io)
-    a0 = agent_out(agents, actor_model, state.data)
-    print('Taking an action ', a0, ' on sytem.')
+    s0 = state_msg.data
+    #print('[INFO] Recvieved a state from simulink. ', s0)
+    a0 = agent_out(agents, actor_model, s0)
+    #print('Taking an action ', a0, ' on sytem.')
     send_action(pub, action, a0)
 
-def reward_callback(rew_sim):
-    rew = rew_sim.data
-    print('[INFO] Recieved a reward :' ,rew)
-
+def reward_callback(reward_msg):
+    global r
+    r = reward_msg.data
+    #print('[INFO] Recieved a reward: ', r)
 
 if __name__ == '__main__':
     try:
+
         ''' Initialiaze agent'''
         agents = DDPG()
         agents.num_states = 4
@@ -148,11 +155,31 @@ if __name__ == '__main__':
         actor_optimizer = tf.keras.optimizers.Adam(actor_lr)
 
         #Initialize agent node
+        s0 = np.zeros((1, agents.num_states), dtype =np.float32)
+        a0 = np.array(0, dtype = np.float32)
+        r = 0
+        TS = 1e-4 #set same time step in simulink
+
         rospy.init_node('Agent')
         pub = rospy.Publisher('agent_action', Float32, queue_size=10)
+        i = 0
+        states = []
+        actions = []
+
         while rospy.is_shutdown() == False:
             rospy.Subscriber("state", Float32MultiArray, state_callback)
             rospy.Subscriber("reward", Float32, reward_callback)
-            rospy.spin()
+            if i < 2:
+                states.append(s0)
+                actions.append(a0)
+                i = i +1
+            else:
+                print(' [s0,s1] = ', states)
+                print(' [a0,a1] = ', actions)
+                states = []
+                actions = []
+                i = 0
+            rospy.sleep(TS)
+
     except rospy.ROSInterruptException:
         pass
