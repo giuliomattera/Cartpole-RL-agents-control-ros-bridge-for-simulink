@@ -8,4 +8,7 @@ Project is created with:
 * ROS Noetic
 * Tensorflow 2.4
 
+## Project sections
+* Simulink folder : you can found all simulink models
+* rl_connections : ROS module with the agent definition and nodes
 
