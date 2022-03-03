@@ -1,0 +1,5 @@
+# This message send a float 32 for the action and respose with an array with state
+
+float32 [] action
+—
+float32 [] state
