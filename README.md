@@ -22,7 +22,9 @@ roscore
 rosrun rl_connection agent_node.py
 ```
 * Run "matlab_node.m" from new terminal with launch file
+* Alternatively
 ```
+cd folder_prj
 ./launch.bash
 ```
 * Use command to importTensorFlowNetwork from model folder
