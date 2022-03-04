@@ -9,8 +9,10 @@ Project is created with:
 * Tensorflow 2.4
 
 ## Project sections
-* Simulink folder : you can found all simulink models
+* simulink : you can found all simulink models and matlab node
 * rl_connections : ROS module with the agent definition and nodes
+* bash file : for launching DDPG training with matlab brige. Note that is necessary to configurate the enviroment and agent!
+* model : store of all agents' weights and model
 
 ## How launch
 * Run roscore from terminal
@@ -28,3 +30,8 @@ cd folder_prj
 ./launch.bash
 ```
 * Use command to importTensorFlowNetwork from model folder
+
+## In progress...
+* Visualization of training on tensorboard
+* Saving weights procedure
+* Importing weights in simulink and test agent
