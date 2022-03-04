@@ -13,11 +13,13 @@ Project is created with:
 * rl_connections : ROS module with the agent definition and nodes
 
 ## How launch
-
-* Run "matlab_node.m"
 * Run "agent_node.py" from terminal:
 ```
 roscore
 rosrun rl_connection agent_node.py
+```
+* Run "matlab_node.m"
+```
+./launch.bash
 ```
 * Use command to importTensorFlowNetwork from model folder
