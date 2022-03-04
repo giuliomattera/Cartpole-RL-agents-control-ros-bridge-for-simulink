@@ -13,12 +13,15 @@ Project is created with:
 * rl_connections : ROS module with the agent definition and nodes
 
 ## How launch
-* Run "agent_node.py" from terminal:
+* Run roscore from terminal
 ```
 roscore
+```
+* Run "agent_node.py" from new terminal:
+```
 rosrun rl_connection agent_node.py
 ```
-* Run "matlab_node.m"
+* Run "matlab_node.m" from new terminal with launch file
 ```
 ./launch.bash
 ```
