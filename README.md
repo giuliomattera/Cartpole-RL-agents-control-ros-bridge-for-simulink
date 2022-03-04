@@ -15,5 +15,9 @@ Project is created with:
 ## How launch
 
 * Run "matlab_node.m"
-* Run "agent_node.py"
+* Run "agent_node.py" from terminal:
+```
+roscore
+rosrun rl_connection agent_node.py
+```
 * Use command to importTensorFlowNetwork from model folder
