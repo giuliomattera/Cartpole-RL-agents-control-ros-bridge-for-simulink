@@ -1,4 +1,4 @@
-Episode_time = 10
+Episode_time = 10;
 rosinit()
 while true
     start = rossubscriber('start_simulation');
@@ -6,7 +6,7 @@ while true
     ini = ini.Data;
     if (ini == 1)
       disp('Starting simulation...')
-      sim('simulink_nodes',Episode_time)
+      sim('simulink_nodes',Episode_time);
      else
         disp('No starting recieved from python')
     end
