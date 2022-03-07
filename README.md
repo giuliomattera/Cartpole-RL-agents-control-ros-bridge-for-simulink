@@ -30,8 +30,10 @@ cd folder_prj
 ./launch.bash
 ```
 * Use command to importTensorFlowNetwork from model folder
+* To launch tensorboard:
+```
+tensorboard --logdir ./python/gradient_tape
+```
 
 ## In progress...
-* Visualization of training on tensorboard
-* Saving weights procedure
 * Importing weights in simulink and test agent
