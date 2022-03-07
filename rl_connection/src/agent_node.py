@@ -3,6 +3,8 @@ import rospy
 import tensorflow as tf
 import numpy as np
 from std_msgs.msg import Float32, Float32MultiArray, Bool
+import datetime
+import config
 
 class DDPG():
 
@@ -59,10 +61,10 @@ class DDPG():
         #next_state = tf.expand_dims(next_state, 0)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
 
-        action = tf.expand_dims(action, 0)
+        #action = tf.expand_dims(action, 0)
         action = tf.convert_to_tensor(action, dtype=tf.float32)
 
-        next_action = tf.expand_dims(np.float32(next_action), 0)
+        #next_action = tf.expand_dims(np.float32(next_action), 0)
         next_action = tf.convert_to_tensor(next_action, dtype=tf.float32)
 
         reward = tf.expand_dims(np.float32(reward), 0)
@@ -118,68 +120,91 @@ def agent_out(agent, actor_model, state):
 
 def state_callback(state_msg):
     global s0, a0
-    action = Float32()
+    action = Float32MultiArray()
     s0 = state_msg.data
-    #print('[INFO] Recvieved a state from simulink. ', s0)
     a0 = agent_out(agents, actor_model, s0)
-    #print('Taking an action ', a0, ' on sytem.')
     send_action(pub, action, a0)
 
 def reward_callback(reward_msg):
     global r
     r = reward_msg.data
-    #print('[INFO] Recieved a reward: ', r)
 
 def done_callback(done_msg):
     global done
     done = done_msg.data
-    
+
+
 if __name__ == '__main__':
     try:
-
         ''' Initialiaze agent'''
         agents = DDPG()
-        agents.num_states = 1
-        agents.num_actions = 1
-        agents.max_effort = 10
-        agents.scale_effort = 1
+        agents.num_states = config.NUM_STATES
+        agents.num_actions = config.NUM_ACTIONS
+        agents.max_effort = config.MAX_EFFORT
+        agents.scale_effort = config.SCALE_EFFORT
 
         actor_model = agents.Actor()
         critic_model = agents.Critic()
-
-        # Learning rate for actor-critic models
-        critic_lr = 1e-5
-        actor_lr = 1e-5
-        agents.gamma = 0.99
-        agents.mu = 0.1
-        agents.std = 0.1
+        #Restor last weights if PANDA approach is true
+        if config.PANDA == True:
+            actor_model.load_weights('./checkpoints/actor')
+            critic_model.load_weights('./checkpoints/critic')
+        
+        critic_lr = config.CRITIC_LR
+        actor_lr = config.ACTOR_LR
 
         critic_optimizer = tf.keras.optimizers.Adam(critic_lr)
         actor_optimizer = tf.keras.optimizers.Adam(actor_lr)
 
-        #Initialize agent node
+        ''' Initialize global variables'''
         s0 = np.zeros((1, agents.num_states), dtype =np.float32)
         a0 = np.array(0, dtype = np.float32)
         r = np.array(0, dtype = np.float32)
+        start = Bool()
         done = False
-        TS = 1e-2 #set same time step in simulink
+        TS = config.TIME_STEP #set same time step in simulink
+        i, j = 0
+        episode = 0
+        states, actions, total_trajectory = []
 
+        ''' Preparing for tensorboard'''
+
+        current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        train_log_dir = 'src/python/gradient_tape/' + current_time + '/training'
+        train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+
+        ''' Push the agent in the network'''
         rospy.init_node('Agent')
-        pub = rospy.Publisher('agent_action', Float32, queue_size=10)
-        i = 0
-        states = []
-        actions = []
-        total_trajectory = []
-        while rospy.is_shutdown() == False:
+        pub = rospy.Publisher('agent_action', Float32MultiArray, queue_size=10)
+        start_simu = rospy.Publisher('start_simulation', Bool, queue_size=10)
+
+
+        while rospy.is_shutdown() == False or episode < config.MAX_EPISODE:
+            #Starting simulation with simulink
+            if j > 0 and not(s0 == np.zeros((1, agents.num_states))):
+                start.data = 0
+                start_simu.publish(start)
+            else:
+                start.data = 1
+                start_simu.publish(start)
+                print('[INFO] Starting simulation in simulink')
+
+            j = j + 1
+            start.data = 0
+            start_simu.publish(start)
+
+            # Listen from simulink
             rospy.Subscriber("state", Float32MultiArray, state_callback)
             rospy.Subscriber("reward", Float32, reward_callback)
             rospy.Subscriber('is_done', Bool, done_callback)
             if done == False:
-                if i < 2:
+                if i < 2: 
+                    #save states and actions at time t, t+1
                     states.append(s0)
                     actions.append(a0)
                     i = i +1
                 else:
+                    #fill trajectory
                     traj = np.array([states[0], actions[0], states[1], actions[1], r])
                     total_trajectory.append(traj)
                     states = []
@@ -187,15 +212,33 @@ if __name__ == '__main__':
                     i = 0
                 rospy.sleep(TS)
             else:
+                done = False
                 print('Goal is reached or episode is finish. Stopping simulation...')
-                trajcetories = np.array(total_trajectory)
-                for i in range(trajcetories.shape[0]):
-                    print('Learning from sample ', i)
-                    print(trajcetories[i][0],trajcetories[i][1], trajcetories[i][4], trajcetories[i][2], trajcetories[i][3])
-                    aloss, closs = agents.update(trajcetories[i][0],trajcetories[i][1], trajcetories[i][4], trajcetories[i][2], trajcetories[i][3] )
-                    print('Actor loss: ', aloss.numpy())
-                    print('Critic loss: ', closs.numpy())
+                print('Starting learning for episode ', episode)
+                trajectories = np.array(total_trajectory)
+                loss_a, loss_c = []
+                for i in range(trajectories.shape[0]):
+                    aloss, closs = agents.update(trajectories[i][0],trajectories[i][1], trajectories[i][4], trajectories[i][2], trajectories[i][3] )
+                    loss_a.append(aloss.numpy())
+                    loss_c.append(closs.numpy())
+                num_sample = trajectories.size[0]
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('Actor loss', np.sum(np.array(loss_a))//num_sample, step=episode)
+                    tf.summary.scalar('Critic loss', np.sum(np.array(loss_c))//num_sample, step=episode)
+                    tf.summary.scalar('Reward',  np.sum(np.array(trajectories[:,4]))//num_sample, step=episode)    
+                j = 0
+                i = 0
+                actor_model.save_weights('/checkpoints/actor')
+                critic_model.save_weights('/checkpoints/critic')
+                episode = episode + 1
+            if episode == config.MAX_EPISODE:
+                print('[INFO] Training on all episodes is finish. See results')
+                print('Saving agents weights...')
+                actor_model.save_weights('/checkpoints/actor')
+                critic_model.save_weights('/checkpoints/critic')
+                print('[INFO] Saving entire models...')
+                actor_model.save('./model/actor')
+                critic_model.save('./model/critic')
                 break;
-
     except rospy.ROSInterruptException:
         pass
