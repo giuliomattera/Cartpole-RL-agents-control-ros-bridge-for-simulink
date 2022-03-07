@@ -61,10 +61,10 @@ class DDPG():
         #next_state = tf.expand_dims(next_state, 0)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
 
-        #action = tf.expand_dims(action, 0)
+        action = tf.expand_dims(action, 0)
         action = tf.convert_to_tensor(action, dtype=tf.float32)
 
-        #next_action = tf.expand_dims(np.float32(next_action), 0)
+        next_action = tf.expand_dims(np.float32(next_action), 0)
         next_action = tf.convert_to_tensor(next_action, dtype=tf.float32)
 
         reward = tf.expand_dims(np.float32(reward), 0)
@@ -145,7 +145,9 @@ if __name__ == '__main__':
 
         actor_model = agents.Actor()
         critic_model = agents.Critic()
+
         #Restor last weights if PANDA approach is true
+
         if config.PANDA == True:
             actor_model.load_weights('./checkpoints/actor')
             critic_model.load_weights('./checkpoints/critic')
@@ -163,9 +165,8 @@ if __name__ == '__main__':
         start = Bool()
         done = False
         TS = config.TIME_STEP #set same time step in simulink
-        i, j = 0
-        episode = 0
-        states, actions, total_trajectory = []
+        i, j, episode = 0 , 0, 0
+        states, actions, total_trajectory = [], [], []
 
         ''' Preparing for tensorboard'''
 
@@ -177,21 +178,21 @@ if __name__ == '__main__':
         rospy.init_node('Agent')
         pub = rospy.Publisher('agent_action', Float32MultiArray, queue_size=10)
         start_simu = rospy.Publisher('start_simulation', Bool, queue_size=10)
-
+        print(s0)
 
         while rospy.is_shutdown() == False or episode < config.MAX_EPISODE:
             #Starting simulation with simulink
-            if j > 0 and not(s0 == np.zeros((1, agents.num_states))):
+            if j > 0 and not(s0 == np.zeros(1)):
                 start.data = 0
                 start_simu.publish(start)
             else:
                 start.data = 1
                 start_simu.publish(start)
                 print('[INFO] Starting simulation in simulink')
-
-            j = j + 1
+                j = j + 1
             start.data = 0
             start_simu.publish(start)
+            
 
             # Listen from simulink
             rospy.Subscriber("state", Float32MultiArray, state_callback)
@@ -216,26 +217,25 @@ if __name__ == '__main__':
                 print('Goal is reached or episode is finish. Stopping simulation...')
                 print('Starting learning for episode ', episode)
                 trajectories = np.array(total_trajectory)
-                loss_a, loss_c = []
+                loss_a, loss_c = [], []
                 for i in range(trajectories.shape[0]):
                     aloss, closs = agents.update(trajectories[i][0],trajectories[i][1], trajectories[i][4], trajectories[i][2], trajectories[i][3] )
                     loss_a.append(aloss.numpy())
                     loss_c.append(closs.numpy())
-                num_sample = trajectories.size[0]
+                num_sample = trajectories.shape[0]
                 with train_summary_writer.as_default():
                     tf.summary.scalar('Actor loss', np.sum(np.array(loss_a))//num_sample, step=episode)
                     tf.summary.scalar('Critic loss', np.sum(np.array(loss_c))//num_sample, step=episode)
                     tf.summary.scalar('Reward',  np.sum(np.array(trajectories[:,4]))//num_sample, step=episode)    
-                j = 0
-                i = 0
-                actor_model.save_weights('/checkpoints/actor')
-                critic_model.save_weights('/checkpoints/critic')
+                j, i = 0, 0
+                actor_model.save_weights('./checkpoints/actor')
+                critic_model.save_weights('./checkpoints/critic')
                 episode = episode + 1
             if episode == config.MAX_EPISODE:
                 print('[INFO] Training on all episodes is finish. See results')
                 print('Saving agents weights...')
-                actor_model.save_weights('/checkpoints/actor')
-                critic_model.save_weights('/checkpoints/critic')
+                actor_model.save_weights('./checkpoints/actor')
+                critic_model.save_weights('./checkpoints/critic')
                 print('[INFO] Saving entire models...')
                 actor_model.save('./model/actor')
                 critic_model.save('./model/critic')

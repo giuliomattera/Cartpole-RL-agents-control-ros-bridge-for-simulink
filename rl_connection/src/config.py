@@ -4,9 +4,9 @@ if not os.path.exists('./checkpoints'):
     os.makedirs('./checkpoints/actor')
     os.makedirs('./checkpoints/critic')
 if not os.path.exists('./model'):
-    os.makedirs('./checkpoints/model')
+    os.makedirs('./model')
 #Agent configuration
-NUM_STATES = 4
+NUM_STATES = 1
 NUM_ACTIONS = 1
 SCALE_EFFORT = 10
 MAX_EFFORT = 10
@@ -16,4 +16,4 @@ PANDA = False
 
 #Simulation configuration
 MAX_EPISODE = 5
-TIME_STEP = 1e-3
+TIME_STEP = 1e-2
