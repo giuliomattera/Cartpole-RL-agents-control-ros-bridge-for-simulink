@@ -55,10 +55,12 @@ class DDPG():
         return tf.keras.Model([state_input, action_input], outputs)
 
     def update(self, state, action, reward, next_state, next_action):
-        #state = tf.expand_dims(state, 0)
+        state = np.array(state)
+        state = state.reshape(1,4)
         state = tf.convert_to_tensor(state, dtype=tf.float32)
 
-        #next_state = tf.expand_dims(next_state, 0)
+        next_state = np.array(next_state)
+        next_state = next_state.reshape(1,4)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
 
         action = tf.expand_dims(action, 0)
@@ -120,7 +122,7 @@ def agent_out(agent, actor_model, state):
 
 def state_callback(state_msg):
     global s0, a0
-    action = Float32MultiArray()
+    action = Float32()
     s0 = state_msg.data
     a0 = agent_out(agents, actor_model, s0)
     send_action(pub, action, a0)
@@ -159,7 +161,7 @@ if __name__ == '__main__':
         actor_optimizer = tf.keras.optimizers.Adam(actor_lr)
 
         ''' Initialize global variables'''
-        s0 = np.zeros((1, agents.num_states), dtype =np.float32)
+        s0 = [0]*config.NUM_STATES #np.zeros((1, agents.num_states), dtype =np.float32)
         a0 = np.array(0, dtype = np.float32)
         r = np.array(0, dtype = np.float32)
         start = Bool()
@@ -171,18 +173,23 @@ if __name__ == '__main__':
         ''' Preparing for tensorboard'''
 
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        train_log_dir = 'src/python/gradient_tape/' + current_time + '/training'
+        train_log_dir = './gradient_tape/' + current_time + '/training'
         train_summary_writer = tf.summary.create_file_writer(train_log_dir)
 
         ''' Push the agent in the network'''
+
         rospy.init_node('Agent')
-        pub = rospy.Publisher('agent_action', Float32MultiArray, queue_size=10)
+        pub = rospy.Publisher('agent_action', Float32, queue_size=10)
         start_simu = rospy.Publisher('start_simulation', Bool, queue_size=10)
         print(s0)
 
         while rospy.is_shutdown() == False or episode < config.MAX_EPISODE:
             #Starting simulation with simulink
-            if j > 0 and not(s0 == np.zeros(1)):
+            start.data = 1
+            start_simu.publish(start)
+            print('[INFO] Starting simulation in simulink')
+            j = j +1
+            if j > 0 :#and not(s0 == np.zeros(1,4)):
                 start.data = 0
                 start_simu.publish(start)
             else:
@@ -190,10 +197,9 @@ if __name__ == '__main__':
                 start_simu.publish(start)
                 print('[INFO] Starting simulation in simulink')
                 j = j + 1
-            start.data = 0
-            start_simu.publish(start)
+            #start.data = 0
+            #start_simu.publish(start)
             
-
             # Listen from simulink
             rospy.Subscriber("state", Float32MultiArray, state_callback)
             rospy.Subscriber("reward", Float32, reward_callback)
@@ -226,7 +232,7 @@ if __name__ == '__main__':
                 with train_summary_writer.as_default():
                     tf.summary.scalar('Actor loss', np.sum(np.array(loss_a))//num_sample, step=episode)
                     tf.summary.scalar('Critic loss', np.sum(np.array(loss_c))//num_sample, step=episode)
-                    tf.summary.scalar('Reward',  np.sum(np.array(trajectories[:,4]))//num_sample, step=episode)    
+                    tf.summary.scalar('Reward',  np.sum(np.array(trajectories[:,4]))//num_sample, step=episode)  
                 j, i = 0, 0
                 actor_model.save_weights('./checkpoints/actor')
                 critic_model.save_weights('./checkpoints/critic')
