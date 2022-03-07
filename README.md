@@ -29,11 +29,11 @@ rosrun rl_connection agent_node.py
 cd folder_prj
 ./launch.bash
 ```
-* Use command to importTensorFlowNetwork from model folder
 * To launch tensorboard:
 ```
 tensorboard --logdir ./python/gradient_tape
 ```
+* At the end of training you could use 'RLcontroller.py' agent with cart_pol.slx system.
 
 ## In progress...
-* Importing weights in simulink and test agent
+* Developing of RLcontroller.py agent
