@@ -32,7 +32,7 @@ cd folder_prj
 ```
 * To launch tensorboard:
 ```
-tensorboard --logdir ./python/gradient_tape
+tensorboard --logdir ./gradient_tape
 ```
 * At the end of training you could use 'RLcontroller.py' agent with cart_pol.slx system.
 
