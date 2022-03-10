@@ -1,4 +1,4 @@
-Episode_time = 10;
+Episode_time = 4;
 rosinit()
 while true
     start = rossubscriber('start_simulation');
