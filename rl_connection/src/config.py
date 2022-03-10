@@ -8,12 +8,15 @@ if not os.path.exists('./model'):
 #Agent configuration
 NUM_STATES = 4
 NUM_ACTIONS = 1
-SCALE_EFFORT = 10
-MAX_EFFORT = 10
-CRITIC_LR = 1e-5
-ACTOR_LR = 1e-5
-PANDA = False
+SCALE_EFFORT = 25
+MAX_EFFORT = 24
+STD = 0.0 #0,1
+MU = 0.0 #-1,1
+CRITIC_LR = 1e-2
+ACTOR_LR = 1e-2
+PANDA = True
+BATCH = 16
 
 #Simulation configuration
-MAX_EPISODE = 30
-TIME_STEP = 1e-2
+MAX_EPISODE = 15
+TIME_STEP = 1e-3
