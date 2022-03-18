@@ -38,9 +38,11 @@ tensorboard --logdir ./gradient_tape
 
 ## Example
 
-#How open
-
 https://user-images.githubusercontent.com/97847032/158992913-9c8decd3-f4b2-4580-b80f-9d37c355f094.mp4
+
+
+
+https://user-images.githubusercontent.com/97847032/158999496-45d29e59-8d7f-4827-a172-86489c18e255.mp4
 
 
 
