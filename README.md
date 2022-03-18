@@ -35,3 +35,7 @@ cd folder_prj
 tensorboard --logdir ./gradient_tape
 ```
 * At the end of training you could use set Training == False in config file to use agent_node as controller
+
+## Example
+
+https://user-images.githubusercontent.com/58986949/115314310-805b2780-a1a7-11eb-8558-648a367ea231.mp4
