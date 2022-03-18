@@ -34,7 +34,4 @@ cd folder_prj
 ```
 tensorboard --logdir ./gradient_tape
 ```
-* At the end of training you could use 'RLcontroller.py' agent with cart_pol.slx system.
-
-## In progress...
-* Developing of RLcontroller.py agent
+* At the end of training you could use set Training == False in config file to use agent_node as controller
