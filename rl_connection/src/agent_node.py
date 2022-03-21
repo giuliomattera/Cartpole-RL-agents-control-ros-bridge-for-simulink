@@ -156,6 +156,7 @@ def done_callback(done_msg):
     global done
     done = done_msg.data
 
+
 if __name__ == '__main__':
     try:
         ''' Initialiaze agent'''
@@ -195,7 +196,7 @@ if __name__ == '__main__':
         action = Float32()
         done = False
         TS = config.TIME_STEP
-        i, j, episode, t = 0 , 0, 0, 0
+        i, episode, t, started,j = 0 , 0, 0, 0, 0
         states, actions, traj, total_trajectory, total_ac = [], [], [], [], []
 
         ''' Preparing for tensorboard'''
@@ -214,45 +215,45 @@ if __name__ == '__main__':
             print('Agent is in learning mode')
         else:
             print('Agent is in control mode')
-            
+        
+        #Starting simulation with simulink
+        start.data = 1
+        start_simu.publish(start)
         while rospy.is_shutdown() == False or episode < config.MAX_EPISODE:
-            #Starting simulation with simulink
-            start.data = 1
-            start_simu.publish(start)
-            if j == 0:
+            if j == 0: 
                 print('[INFO] Starting simulation in simulink...')
-                j = j +1
+                j = j + 1
             else:
                 start.data = 0
                 start_simu.publish(start)
 
-            rospy.Subscriber('is_done', Bool, done_callback)
-            
-            if done == False:
+            rospy.Subscriber("is_done", Bool, done_callback)
+            rospy.Subscriber("reward", Float32, reward_callback)
+            if done == False and r != 0:
+                start.data = 0
+                start_simu.publish(start)
                 rospy.Subscriber("state", Float32MultiArray, state_callback)
                 rospy.Subscriber("reward", Float32, reward_callback)
+                rospy.Subscriber("is_done", Bool, done_callback)
                 a0 = agent_out(agents, actor_model, s0)
-                print('Action ', a0)
                 send_action(pub, action, a0)
                 r_t = r*agents.gamma**t + r_t
-                print('Comulative reward : ', r_t)
                 if i < 2: 
                     #save states and actions at time t
                     states.append(s0)
                     actions.append(a0)
                     i = i +1
-
                     total_ac.append(a0)
                 else:
                     #fill trajectory with time t,t+1
-                    traj = [states[0], actions[0], states[1], actions[1], r_t]
+                    traj = [states[0], actions[0], states[1], actions[1], r]
                     total_trajectory.append(traj)
                     states = []
                     actions = []
                     i = 0
-                    total_ac.append(a0) 
+                    total_ac.append(a0)
+                    t = len(total_trajectory)
                 rospy.sleep(TS)
-                t = t + 1
             else:
                 done = False
                 loss_a, loss_c = [], []
@@ -269,17 +270,11 @@ if __name__ == '__main__':
 
                             loss_a.append(aloss.numpy())
                             loss_c.append(closs.numpy())
-                        
-                        
-                    
-                        avg_act = np.sum(np.array(loss_a))//num_sample
-                        avg_cri = np.sum(np.array(loss_c))//num_sample
-                        avg_rew = np.sum(np.array(total_trajectory)[:,4])//num_sample
                     
                         with train_summary_writer.as_default():
-                            tf.summary.scalar('Actor loss', np.sum(np.array(loss_a))//num_sample, step=episode)
-                            tf.summary.scalar('Critic loss', np.sum(np.array(loss_c))//num_sample, step=episode)
-                            tf.summary.scalar('Reward',  np.sum(np.array(total_trajectory)[:,4])//num_sample, step=episode)  
+                            tf.summary.scalar('Average of actor loss', np.sum(np.array(loss_a))//num_sample, step=episode)
+                            tf.summary.scalar('Average of critic loss', np.sum(np.array(loss_c))//num_sample, step=episode)
+                            tf.summary.scalar('Discounted reward',  r_t/num_sample, step=episode)  
                         episode = episode + 1
                         j, i = 0, 0
                         total_trajectory = []
@@ -288,10 +283,15 @@ if __name__ == '__main__':
                         actor_model.save_weights('./checkpoints/actor')
                         critic_model.save_weights('./checkpoints/critic')
                         print('-------------------------')
+                start.data = 0
+                start_simu.publish(start)
                 s0 = [0]*config.NUM_STATES
                 a0 = np.array(0, dtype = np.float32)
                 r  = np.array(0, dtype = np.float32)
-
+                r_t = np.array(0, dtype = np.float32)
+                start.data = 1
+                start_simu.publish(start)
+                rospy.sleep(1)
             if episode == config.MAX_EPISODE:
                 print('[INFO] All episod are finish. Saving entire models...')
                 if config.TRAIN == True:
