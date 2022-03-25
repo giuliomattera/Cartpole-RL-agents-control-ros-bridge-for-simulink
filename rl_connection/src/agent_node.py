@@ -76,23 +76,35 @@ class DDPG():
 
         return tf.keras.Model([state_input, action_input], outputs)
 
-    def update(self, state, action, reward, next_state, next_action):
+    def update(self, state, action, reward, next_state, next_action, batch):
         state = np.array(state)
-        state = state.reshape(len(state),self.num_states)
+
+        if batch == 1:
+            state = state.reshape(len(state),self.num_states)
+        else:
+            state = state.reshape(1,4)
         state = tf.convert_to_tensor(state, dtype=tf.float32)
 
         next_state = np.array(next_state)
-        next_state = next_state.reshape(len(next_state),self.num_states)
+        if batch == 1:
+            next_state = next_state.reshape(len(next_state),self.num_states)
+        else:
+            next_state = next_state.reshape(1,4)
+
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
-    
+
         action = np.float32(action)
-        action = action.reshape(len(action),self.num_actions)
-        #action = tf.expand_dims(np.float32(action), 0)
+        if batch == 1:
+            action = action.reshape(len(action),self.num_actions)
+        else:
+            action = tf.expand_dims(action, 0)
         action = tf.convert_to_tensor(action, dtype=tf.float32)
 
         next_action = np.float32(next_action)
-        next_action = next_action.reshape(len(next_action),self.num_actions)
-        #next_action = tf.expand_dims(np.float32(next_action), 0)
+        if batch == 1:
+            next_action = next_action.reshape(len(next_action),self.num_actions)
+        else:
+            next_action = tf.expand_dims(next_action, 0)
         next_action = tf.convert_to_tensor(next_action, dtype=tf.float32)
 
         reward = tf.expand_dims(np.float32(reward), 0)
@@ -295,16 +307,19 @@ if __name__ == '__main__':
                         print('Final discounted reward: ', r_t)
                         #TO DO a batch training
                         if num_sample < BATCH:
+                            print('Training without batch beacuse num of samples < batch size')
                             for i in range(num_sample):
 
                                 aloss, closs = agents.update(total_trajectory[i][0],
                             total_trajectory[i][1], 
                             total_trajectory[i][4],
                             total_trajectory[i][2], 
-                            total_trajectory[i][3] )
+                            total_trajectory[i][3],
+                            0)
 
                                 loss_a.append(aloss.numpy())
                                 loss_c.append(closs.numpy())
+                            avg_TD = np.sum(np.array(loss_c))/(num_sample//num_sample)
                         else:
                             for mb in range(num_sample//BATCH):
                                 mini_state0 = []
@@ -323,14 +338,15 @@ if __name__ == '__main__':
                                 mini_action0, 
                                 mini_reward,
                                 mini_state1, 
-                                mini_action0)
+                                mini_action0,
+                                1)
 
                                 loss_a.append(aloss.numpy())
                                 loss_c.append(closs.numpy())
 
                                 print(' TD error for batch ', mb, ' is ', closs.numpy())
                                 print(' Seen so far: ', ((mb + 1) * BATCH), ' /', num_sample)
-                        avg_TD = np.sum(np.array(loss_c))/num_sample
+                            avg_TD = np.sum(np.array(loss_c))/(num_sample//BATCH)
                         print('The avg TD error : ', avg_TD)
 
                         with train_summary_writer.as_default():
@@ -361,9 +377,12 @@ if __name__ == '__main__':
                 r_t = np.array(0, dtype = np.float32)
 
                 eps = exp_decay(episode, config.EPSILON, config.EPS_DECAY )
-
-                critic_optimizer.lr = exp_decay(episode, config.CRITIC_LR,  config.CLR_DECAY)
-                actor_optimizer.lr = exp_decay(episode, config.ACTOR_LR,  config.ALR_DECAY)
+                if episode < config.EPS_WARM and config.WARMUP == True:
+                    critic_optimizer.lr = exp_decay(episode, config.CRITIC_LR,  -config.CLR_DECAY)
+                    actor_optimizer.lr = exp_decay(episode, config.ACTOR_LR,  -config.ALR_DECAY)
+                else:
+                    critic_optimizer.lr = exp_decay(episode, config.CRITIC_LR,  config.CLR_DECAY)
+                    actor_optimizer.lr = exp_decay(episode, config.ACTOR_LR,  config.ALR_DECAY)
 
 
 
