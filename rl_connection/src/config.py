@@ -1,25 +1,35 @@
 import os
 
 if not os.path.exists('./checkpoints'):
-    os.makedirs('./checkpoints/actor')
-    os.makedirs('./checkpoints/critic')
+    os.makedirs('./checkpoints')
+
 
 if not os.path.exists('./model'):
     os.makedirs('./model')
 
+#Simulation configuration
+MAX_EPISODE = 50
+TIME_STEP = 2e-2
+
 #Agent configuration
 NUM_STATES = 4
 NUM_ACTIONS = 1
+
 SCALE_EFFORT = 30
 MAX_EFFORT = 30
-STD = 0.0#0,1
-STD_DECAY = 1.1
+
+STD = 1#0,1
 MU = 0 #-1,1
-CRITIC_LR = 4e-3
-ACTOR_LR = 5e-5
-PANDA = False
+
+EPSILON = 0.5
+EPS_DECAY = 1/MAX_EPISODE
+
+CRITIC_LR = 1e-3
+ACTOR_LR = 3e-4
+
+CLR_DECAY = 1/MAX_EPISODE
+ALR_DECAY = 1/MAX_EPISODE
+
+PANDA = True
 TRAIN = True
 
-#Simulation configuration
-MAX_EPISODE = 100
-TIME_STEP = 2e-3
