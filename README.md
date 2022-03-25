@@ -4,9 +4,9 @@ In this project a DDPG agent is created in python with tensorflow library. ROS i
 
 ## Technologies
 Project is created with:
-* MATLAB R2021a
-* ROS Noetic
-* Tensorflow 2.4
+* MATLAB R2021a : ROS Toolbox for MATLAB and Simulink. Simscape Multibody library for kinematic and dynamic model of system
+* ROS Noetic : std messages (Float32, Float32MultiArray, Bool) and Pub/Subscriber communication
+* Tensorflow 2.4 : keras API and gradient tape method for learning
 
 ## Project sections
 * simulink : you can found all simulink models and matlab node
