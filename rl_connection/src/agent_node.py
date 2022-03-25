@@ -22,7 +22,7 @@ class DDPG():
 
         initializer = tf.keras.initializers.GlorotNormal()
 
-        input = tf.keras.layers.Input(shape=(self.num_states,))
+        input = tf.keras.layers.Input(shape=(None,self.num_states))
 
         hidden = tf.keras.layers.Dense(128, 
         activation=tf.keras.layers.LeakyReLU(alpha=0.01), 
@@ -45,7 +45,7 @@ class DDPG():
         initializer = tf.keras.initializers.GlorotNormal()
 
         # State as input
-        state_input = tf.keras.layers.Input(shape=(self.num_states))
+        state_input = tf.keras.layers.Input(shape=(self.num_states) )
         state_out_critic = tf.keras.layers.Dense(128, 
         activation=tf.keras.layers.LeakyReLU(alpha=0.1),
          kernel_initializer= initializer)(state_input)
@@ -78,17 +78,21 @@ class DDPG():
 
     def update(self, state, action, reward, next_state, next_action):
         state = np.array(state)
-        state = state.reshape(1,4)
+        state = state.reshape(len(state),self.num_states)
         state = tf.convert_to_tensor(state, dtype=tf.float32)
 
         next_state = np.array(next_state)
-        next_state = next_state.reshape(1,4)
+        next_state = next_state.reshape(len(next_state),self.num_states)
         next_state = tf.convert_to_tensor(next_state, dtype=tf.float32)
-
-        action = tf.expand_dims(np.float32(action), 0)
+    
+        action = np.float32(action)
+        action = action.reshape(len(action),self.num_actions)
+        #action = tf.expand_dims(np.float32(action), 0)
         action = tf.convert_to_tensor(action, dtype=tf.float32)
 
-        next_action = tf.expand_dims(np.float32(next_action), 0)
+        next_action = np.float32(next_action)
+        next_action = next_action.reshape(len(next_action),self.num_actions)
+        #next_action = tf.expand_dims(np.float32(next_action), 0)
         next_action = tf.convert_to_tensor(next_action, dtype=tf.float32)
 
         reward = tf.expand_dims(np.float32(reward), 0)
@@ -218,6 +222,7 @@ if __name__ == '__main__':
         i, episode, t, started,j= 0 , 0, 0, 0, 0
         states, actions, traj, total_trajectory, = [], [], [], []
 
+        BATCH = config.BATCH_SIZE
         ''' Preparing for tensorboard'''
 
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -288,18 +293,45 @@ if __name__ == '__main__':
                     if not num_sample == 0:
                         print('[INFO] Episode is finish. Learning from episode ', episode, '  with ', num_sample, ' samples..')
                         print('Final discounted reward: ', r_t)
+                        #TO DO a batch training
+                        if num_sample < BATCH:
+                            for i in range(num_sample):
 
-                        for i in range(num_sample):
-                            aloss, closs = agents.update(total_trajectory[i][0],
+                                aloss, closs = agents.update(total_trajectory[i][0],
                             total_trajectory[i][1], 
                             total_trajectory[i][4],
                             total_trajectory[i][2], 
                             total_trajectory[i][3] )
 
-                            loss_a.append(aloss.numpy())
-                            loss_c.append(closs.numpy())
+                                loss_a.append(aloss.numpy())
+                                loss_c.append(closs.numpy())
+                        else:
+                            for mb in range(num_sample//BATCH):
+                                mini_state0 = []
+                                mini_action0 = []
+                                mini_state1 = []
+                                mini_action1 = []
+                                mini_reward = []
+                                for sample in range(BATCH):
+                                    mini_state0.append(total_trajectory[mb*BATCH:BATCH*(mb+1)+1][sample][0])
+                                    mini_action0.append(total_trajectory[mb*BATCH:BATCH*(mb+1)+1][sample][1])
+                                    mini_state1.append(total_trajectory[mb*BATCH:BATCH*(mb+1)+1][sample][2])
+                                    mini_action1.append(total_trajectory[mb*BATCH:BATCH*(mb+1)+1][sample][3])
+                                    mini_reward.append(total_trajectory[mb*BATCH:BATCH*(mb+1)+1][sample][4])
 
+                                aloss, closs = agents.update(mini_state0,
+                                mini_action0, 
+                                mini_reward,
+                                mini_state1, 
+                                mini_action0)
+
+                                loss_a.append(aloss.numpy())
+                                loss_c.append(closs.numpy())
+
+                                print(' TD error for batch ', mb, ' is ', closs.numpy())
+                                print(' Seen so far: ', ((mb + 1) * BATCH), ' /', num_sample)
                         avg_TD = np.sum(np.array(loss_c))/num_sample
+                        print('The avg TD error : ', avg_TD)
 
                         with train_summary_writer.as_default():
                             tf.summary.scalar('Average of actor loss', np.sum(np.array(loss_a))/num_sample, step=episode)
