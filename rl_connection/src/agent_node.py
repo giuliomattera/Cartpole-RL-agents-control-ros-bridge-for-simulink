@@ -211,9 +211,10 @@ if __name__ == '__main__':
             actor_model.load_weights('./checkpoints/actor')
             critic_model.load_weights('./checkpoints/critic')
             best = np.load('./checkpoints/last_td.npy')
+            print(' Last best : ', best)
         else:
             print('[INFO] Initializing agent s weights...')
-            best = 100
+            best = 1000000
 
         critic_lr = config.CRITIC_LR
         actor_lr = config.ACTOR_LR
@@ -231,7 +232,7 @@ if __name__ == '__main__':
         action = Float32()
         done = False
         TS = config.TIME_STEP
-        i, episode, t, started,j= 0 , 0, 0, 0, 0
+        i, episode, t, started, j, EARLY = 0 , 0, 0, 0, 0, 0
         states, actions, traj, total_trajectory, = [], [], [], []
 
         BATCH = config.BATCH_SIZE
@@ -303,7 +304,7 @@ if __name__ == '__main__':
                 if config.TRAIN == True:
 
                     if not num_sample == 0:
-                        print('[INFO] Episode is finish. Learning from episode ', episode, '  with ', num_sample, ' samples..')
+                        print('[INFO] Episode is finish. Learning from episode ', episode, '/', config.MAX_EPISODE, '  with ', num_sample, ' samples..')
                         print('Final discounted reward: ', r_t)
                         #TO DO a batch training
                         if num_sample < BATCH:
@@ -319,7 +320,7 @@ if __name__ == '__main__':
 
                                 loss_a.append(aloss.numpy())
                                 loss_c.append(closs.numpy())
-                            avg_TD = np.sum(np.array(loss_c))/(num_sample//num_sample)
+                            avg_TD = np.sum(np.array(loss_c))/(num_sample)
                         else:
                             for mb in range(num_sample//BATCH):
                                 mini_state0 = []
@@ -350,20 +351,25 @@ if __name__ == '__main__':
                         print('The avg TD error : ', avg_TD)
 
                         with train_summary_writer.as_default():
-                            tf.summary.scalar('Average of actor loss', np.sum(np.array(loss_a))/num_sample, step=episode)
                             tf.summary.scalar('Average of TD error', avg_TD, step=episode)
-                            tf.summary.scalar('Discounted reward',  r_t/num_sample, step=episode)  
+                            tf.summary.scalar('Discounted reward',  r_t/num_sample, step=episode)
+                            tf.summary.scalar('Actor learning rate', actor_optimizer.lr, step = episode)
+                            tf.summary.scalar('Critic learning rate', critic_optimizer.lr, step = episode)    
                         episode = episode + 1
                         j, i = 0, 0
                         total_trajectory = []
                         
-                        if avg_TD < best:
+                        if abs(avg_TD) < best and episode > 4:
                             print('TD error is deacresed. Learning phase is finish. Saving agents weights...')
                             actor_model.save_weights('./checkpoints/actor')
                             critic_model.save_weights('./checkpoints/critic')
-                            best = avg_TD
+                            best = abs(avg_TD)
+                            EARLY = 0
+                        elif episode == 0:
+                            best = abs(avg_TD)
                         else:
-                            print(' TD error is not decreased. No saving chechpoint')
+                            print(' TD error is not decreased. The best is ', best, '. No saving chechpoint')
+                            EARLY = EARLY + 1
                         print('-------------------------')
                     else:
                         start.data = 1
@@ -385,7 +391,9 @@ if __name__ == '__main__':
                     actor_optimizer.lr = exp_decay(episode, config.ACTOR_LR,  config.ALR_DECAY)
 
 
-
+            if EARLY == config.EARLY_STOPPING:
+                print('[INFO] Early stopping condition reached. Exit from simulation without saving checkpoints...')
+                break;
             if episode == config.MAX_EPISODE:
                 print('[INFO] All episod are finish. Saving entire models...')
                 if config.TRAIN == True:
