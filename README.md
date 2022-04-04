@@ -37,7 +37,7 @@ tensorboard --logdir ./gradient_tape
 ```
 * At the end of training you could use set Training == False in config file to use agent_node as controller
 
-##`Resoruces
+## Resoruces
 
 * DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/
 * DPPG paper : https://arxiv.org/pdf/1509.02971.pdf
