@@ -1,6 +1,6 @@
 # Carte Pole control with A2C agent
 
-In this project a DDPG agent is created in python with tensorflow library. ROS is used to link the actions of the agent with the systems' state (Carte Pole) modelled in Simulink. 
+In this project a actor-critic agent is created in python with tensorflow library. ROS is used to link the actions of the agent with the systems' state (Carte Pole) modelled in Simulink. 
 
 ## Technologies
 Project is created with:
