@@ -11,7 +11,7 @@ Project is created with:
 ## Project sections
 * simulink : you can found all simulink models and matlab node
 * rl_connections : ROS module with the agent definition and nodes. You can found also a config file useful for agent_node
-* bash file : for launching DDPG training with matlab brige. Note that is necessary to configurate the enviroment and agent!
+* bash file : for launching RL agent training with matlab brige. Note that is necessary to configurate the enviroment and agent!
 * model : store of all agents' models
 * checkpoints : store of weights during training. Usefull for fine tuning of controller.
 
