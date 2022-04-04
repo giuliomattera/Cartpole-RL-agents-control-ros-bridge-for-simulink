@@ -6,7 +6,8 @@ In this project a Q- actor-critic agent is created in python with tensorflow lib
 Project is created with:
 * MATLAB R2021a : ROS Toolbox for MATLAB and Simulink. Simscape Multibody library for kinematic and dynamic model of system
 * ROS Noetic : std messages (Float32, Float32MultiArray, Bool) and Pub/Subscriber communication
-* Tensorflow 2.4 : keras API and gradient tape method for learning
+* Tensorflow 2.4.0 : keras API and gradient tape method for learning
+* TensorFlow Probability 0.12.2
 
 ## Project sections
 * simulink : you can found all simulink models and matlab node
