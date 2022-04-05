@@ -1,6 +1,6 @@
 # Carte Pole control with RL agents
 
-In this project a REINFORCE with baseline (Q-Actor-Critic) and DPPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agent with the systems' state (Carte Pole) modelled in Simulink. 
+In this project a REINFORCE with baseline (Q-Actor-Critic) and DDPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agent with the systems' state (Carte Pole) modelled in Simulink. 
 
 <details>
 <summary><strong>Remarks on : Actor-Critic agent with baseline for continous action space</strong></summary>
