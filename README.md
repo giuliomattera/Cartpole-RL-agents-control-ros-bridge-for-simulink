@@ -101,25 +101,27 @@ Project is created with:
 * checkpoints : store of weights during training. Usefull for fine tuning of controller.
 
 ## How launch
-* Run roscore from terminal
+Once ROS Noetic full desktop version is installed and your catkin_ws is created, you can download all files and put they in your src folder. 
+
+* Run roscore from terminal to initilize the ROS master node
 ```
 roscore
 ```
-* Run "DDPG.py" or "QAC.py" from new terminal:
+* Run "DDPG.py" or "QAC.py" from new terminal (rl_connection is the name of folder in our src):
 ```
 rosrun rl_connection DDPG.py
 ```
-* Run "matlab_node.m" from new terminal with launch file
+* Run "matlab_node.m" from new terminal with launch file or from MATLAB GUI with run button.
 * Alternatively
 ```
 cd folder_prj
 ./launch.bash
 ```
-* To launch tensorboard:
+* To launch tensorboard (be sure that you are in your catkin_ws folder):
 ```
 tensorboard --logdir ./gradient_tape
 ```
-* At the end of training you could use set Training == False in config file to use agent_node as controller
+* At the end of training you could use set Training == False in config file to use agent node (DDPG or QAC) as controller
 
 ## Resoruces
 
