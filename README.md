@@ -2,6 +2,11 @@
 
 In this project a REINFORCE with baseline (Q-Actor-Critic) and DPPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agent with the systems' state (Carte Pole) modelled in Simulink. 
 
+## Remarks on : Actor-Critic agent with baseline for continous action space
+
+## Remarks on : Deep Deterministic Policy Gradient agent
+
+
 ## Technologies
 Project is created with:
 * MATLAB R2021a : ROS Toolbox for MATLAB and Simulink. Simscape Multibody library for kinematic and dynamic model of system
