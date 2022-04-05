@@ -92,7 +92,7 @@ Project is created with:
 ```
 roscore
 ```
-* Run "DDPG.py" or "QAC.p" from new terminal:
+* Run "DDPG.py" or "QAC.py" from new terminal:
 ```
 rosrun rl_connection DDPG.py
 ```
