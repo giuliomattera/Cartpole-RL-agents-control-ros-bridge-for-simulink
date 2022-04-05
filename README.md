@@ -2,9 +2,37 @@
 
 In this project a REINFORCE with baseline (Q-Actor-Critic) and DPPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agent with the systems' state (Carte Pole) modelled in Simulink. 
 
-## Remarks on : Actor-Critic agent with baseline for continous action space
+<details>
+<summary><strong>Remarks on : Actor-Critic agent with baseline for continous action space</strong></summary>
+  
+Unlike many other RL algorithms that parameterize the value functions (Q learning, SARSA, DQN etc.) and derive the policy from the optimal value function using off-policy or on-policy methods (check in resources for details), the **Policy gradient algorithms** use a neural network or a function (to be more general) to estimate directly the policy. To do this the core idea is to maximize the V function, so for use a **gradient ascent** this function must be differentiable, this means that the policy will be a softmax, a gaussian distribution or a neural network (it depends if action space is discrete or continous). REINFORCE is a popular algortihms (check resources for more details) that use the **temporal difference error** coming from Bellamn equation to calculate the gradient:
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161729301-381c7cdd-380e-44ba-b2a8-96608dc95b01.png)
 
-## Remarks on : Deep Deterministic Policy Gradient agent
+Where Gt is the comulative discounted reward at each time step, The learning algortihms look like:
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161730201-49d4261c-0836-4496-87c8-6d5fbd618a5b.png)
+
+But also if the policy gradients methods could be simple to implement, the major backside is the high variance caused by the calculation of returns (or reward). A common way to reduce variance is subtract a **baseline b(s)** from the returns in the policy gradient that does not depend from the action taken from policy in this way it mustn’t introduce any bias to the policy gradient. This could be also a random number, but a great candidate to use like baseline is the the value function itself! 
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161731662-5c5e3308-63fb-4ad6-a85e-b05e61c59462.png)
+
+ 
+ This bring to a new kind of agent called **actor-critic**, in which the actor is the part of the agent that take the action, and the critic is the part that evaluate how the state (or the pair of (action,state)) is good. If we use as baseline the value Q(s,a) we obtain a Q-Actor-Critic agent. The goal is to minimize the TD error for the critic and use PG algorithm for the actor, like shown before. 
+  
+  If we are talking about Deep Reinforcement Learning, we have to train 2 differents networks:
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161732104-cdcd655b-66b8-4183-b8d9-3f0071b46d50.png)
+  
+  Now if the action space is discrete, we could use a softmax activation function in the last layer of actor network, otherwise we have to split our actor network in 2 output with dimension equal to n (number of actions) one for predict the mean of a gaussian distribution and another to predict the ln(std) (beacuse it allow us to predict any value) and we will use these 2 parameters to sample an action according with this distribution (this for all sample in the mu-vector and ln(std)-vector output). This is the different between a **categorical policy** and **fiagonal gaussian policy** for a **stochastic policy**
+
+</details>
+
+
+<details>
+<summary><strong>Remarks on : Deep Deterministic Policy Gradient agent</strong></summary>
+In process...
+</details>
 
 
 ## Technologies
@@ -44,17 +72,22 @@ tensorboard --logdir ./gradient_tape
 
 ## Resoruces
 
-* DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/
-* DPPG paper : https://arxiv.org/pdf/1509.02971.pdf
+* Getting started with key concepts of RL : https://spinningup.openai.com/en/latest/spinningup/rl_intro.html
+* On-policy vs off-policy alghoritms : https://analyticsindiamag.com/reinforcement-learning-policy/
 * REINFORCE with baseline (QAC) from Sutton and Barto, chapter 13 (in progress...)
+* DPPG paper : https://arxiv.org/pdf/1509.02971.pdf 
+* DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/
 
-## Example
-
+<details>
+<summary><strong>Video examples </strong></summary>
+  
 https://user-images.githubusercontent.com/97847032/158992913-9c8decd3-f4b2-4580-b80f-9d37c355f094.mp4
 
 
 
 https://user-images.githubusercontent.com/97847032/158999496-45d29e59-8d7f-4827-a172-86489c18e255.mp4
+
+</details>
 
 
 
