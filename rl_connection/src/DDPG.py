@@ -111,9 +111,11 @@ class DDPG():
 
             TD_error = y-critic_q
 
-            critic_loss = tf.math.reduce_mean(
-                tf.math.square(TD_error)
-                )  # TD error
+            TD_error = TD_error.numpy()
+
+            TD_error = np.sum(TD_error)/TD_error.shape[0]
+            
+            critic_loss = tf.keras.losses.mean_squared_error(y_true=y, y_pred=critic_q)
 
             critic_grad = gradient.gradient(
                 critic_loss, critic_model.trainable_variables)
@@ -213,7 +215,7 @@ if __name__ == '__main__':
         s0 = [0]*config.NUM_STATES
         a0 = np.array(0, dtype = np.float32)
         r = np.array(0, dtype = np.float32)
-        r_t = np.array(0, dtype = np.float32)
+        G_t = np.array(0, dtype = np.float32)
         start = Bool()
         action = Float32()
         done = False
@@ -270,7 +272,7 @@ if __name__ == '__main__':
                     i = i +1
 
                 else:
-                    r_t = r*agents.gamma**t + r_t #update discounted reward for metrics
+                    G_t += r*agents.gamma**t #update discounted reward for metrics
 
                     #fill trajectory with time t,t+1
                     traj = [states[0], actions[0], states[1], actions[1], r]
@@ -289,15 +291,15 @@ if __name__ == '__main__':
 
                 if config.TRAIN == True:
 
-                    if not num_sample == 0:
+                    if not num_sample < BATCH//2:
                         print('[INFO] Episode is finish. Learning from episode ', episode, '/', config.MAX_EPISODE, '  with ', num_sample, ' samples..')
-                        print('Final discounted reward: ', r_t)
+                        print('Final discounted reward: ', G_t)
 
                         if num_sample < BATCH:
                             print('Training without batch beacuse num of samples < batch size')
                             for i in range(num_sample):
 
-                                aloss, closs = agents.update(total_trajectory[i][0],
+                                TD, aloss = agents.update(total_trajectory[i][0],
                             total_trajectory[i][1], 
                             total_trajectory[i][4],
                             total_trajectory[i][2], 
@@ -305,7 +307,7 @@ if __name__ == '__main__':
                             0)
 
                                 loss_a.append(aloss.numpy())
-                                loss_c.append(closs.numpy())
+                                loss_c.append(TD)
                             avg_TD = np.sum(np.array(loss_c))/(num_sample)
                         else:
                             for mb in range(num_sample//BATCH):
@@ -321,7 +323,7 @@ if __name__ == '__main__':
                                     mini_action1.append(total_trajectory[mb*BATCH:BATCH*(mb+1)+1][sample][3])
                                     mini_reward.append(total_trajectory[mb*BATCH:BATCH*(mb+1)+1][sample][4])
 
-                                aloss, closs = agents.update(mini_state0,
+                                TD, aloss = agents.update(mini_state0,
                                 mini_action0, 
                                 mini_reward,
                                 mini_state1, 
@@ -329,12 +331,14 @@ if __name__ == '__main__':
                                 1)
 
                                 loss_a.append(aloss.numpy())
-                                loss_c.append(closs.numpy())
+                                loss_c.append(TD)
 
-                                print(' TD error for batch ', mb, ' is ', closs.numpy())
+                                print(' TD error for batch ', mb, ' is ', TD)
                                 print(' Seen so far: ', ((mb + 1) * BATCH), ' /', num_sample)
                             avg_TD = np.sum(np.array(loss_c))/(num_sample//BATCH)
+                            al = np.sum(np.array(loss_a))/(num_sample//BATCH)
                         print('The avg TD error : ', avg_TD)
+                        print(' The avg actor loss : ', al)
                         
                         #Update also target weights based on first network
                         update_target(target_actor.variables, actor_model.variables, 0.005)
@@ -342,14 +346,21 @@ if __name__ == '__main__':
                         
                         with train_summary_writer.as_default():
                             tf.summary.scalar('Average of TD error', avg_TD, step=episode)
-                            tf.summary.scalar('Discounted reward',  r_t/num_sample, step=episode)
+                            tf.summary.scalar('Average actor loss',  al/num_sample, step=episode)
                             tf.summary.scalar('Actor learning rate', actor_optimizer.lr, step = episode)
                             tf.summary.scalar('Critic learning rate', critic_optimizer.lr, step = episode)    
                         episode = episode + 1
                         j, i = 0, 0
                         total_trajectory = []
                         
-                        if  episode > config.EPS_WARM:
+                        if config.WARMUP == True:
+                            if  episode > config.EPS_WARM:
+                                print('TD error is deacresed. Learning phase is finish. Saving agents weights...')
+                                actor_model.save_weights('./checkpoints/actor')
+                                critic_model.save_weights('./checkpoints/critic')
+                                target_actor.save_weights('./checkpoints/Tactor')
+                                target_critic.save_weights('./checkpoints/Tcritic')
+                        else:
                             print('TD error is deacresed. Learning phase is finish. Saving agents weights...')
                             actor_model.save_weights('./checkpoints/actor')
                             critic_model.save_weights('./checkpoints/critic')
@@ -365,7 +376,7 @@ if __name__ == '__main__':
                 s0 = [0]*config.NUM_STATES
                 a0 = np.array(0, dtype = np.float32)
                 r  = np.array(0, dtype = np.float32)
-                r_t = np.array(0, dtype = np.float32)
+                G_t = np.array(0, dtype = np.float32)
 
                 if episode < config.EPS_WARM and config.WARMUP == True:
                     critic_optimizer.lr = exp_decay(episode, config.CRITIC_LR,  config.CLR_DECAY)
