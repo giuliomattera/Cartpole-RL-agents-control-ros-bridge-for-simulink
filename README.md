@@ -31,7 +31,45 @@ But also if the policy gradients methods could be simple to implement, the major
 
 <details>
 <summary><strong>Remarks on : Deep Deterministic Policy Gradient agent</strong></summary>
-In process...
+In this case we have 4 networks:
+  
+* Actor network that predict direcrtly the action istead predict [mu,std] of a gaussian distribution
+* Target Actor
+* Q network, quite similar to baseline network in AC agent
+* Target Q network
+ 
+  The target networks are time-delayed copies of their original networks that we use to upgrade weights in quite stable way. In methods that do not use target networks, the update equations of the network are interdependent on the values calculated by the network itself, which makes it prone to divergence.
+  
+* DDPG is an off-policy algorithm, because is a sort of extension of Q-learning.
+* DDPG can only be used for environments with continuous action spaces.
+* DDPG can be thought of as being deep Q-learning for continuous action spaces.
+  
+ Recap the Bellman equation describing the optimal action-value function in Q-learning algorithm (like you can see is off-policy):
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161815819-fda3b998-3262-4dd7-9272-a77af8217b61.png)
+
+  If Q(s,a) function is approximated by a neural network we could use a mean-squared Bellman error (MSBE) function to train it (like for the critic of QAC) :
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161816035-5129143c-64e2-4207-b802-783d59b3ba45.png)
+
+ At this point we have to add 2 stuff respect to Q-learning:
+  * A buffer to store all trajectory
+  * Q(s',a') is called **target network**
+  
+  In DQN-based algorithms, the target network is just copied over from the main network every some-fixed-number of steps. In DDPG-style algorithms, the target network is updated once per main network update by polyak averaging. 
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161816839-c2e25d02-22a1-4852-a37d-2e01bfd25e99.png)
+
+  Policy learning in DDPG is fairly simple. We want to learn a deterministic policy which gives the action that maximizes Q(s,a). Because the action space is continuous, and we assume the Q-function is differentiable with respect to action, we can just perform gradient ascent (with respect to policy parameters only) to solve
+  
+![immagine](https://user-images.githubusercontent.com/97847032/161816871-630ae12e-4005-44fb-b003-342a10df0535.png)
+ 
+ Once DDPG is a off-policy algortihms and the policy is **deterministic** (not stochastic like QAC), if the agent were to explore on-policy, in the beginning it would probably not try a wide enough variety of actions to find useful learning signals. To make DDPG policies explore better, we add white noise to their actions at training time.
+  
+ ![immagine](https://user-images.githubusercontent.com/97847032/161817384-95e84e9e-035b-420d-9ffc-360db622cc6b.png)
+
+  ![immagine](https://user-images.githubusercontent.com/97847032/161817856-c267ee10-c504-48a2-9663-cb6657ca038d.png)
+
 </details>
 
 
@@ -74,7 +112,7 @@ tensorboard --logdir ./gradient_tape
 
 * Getting started with key concepts of RL : https://spinningup.openai.com/en/latest/spinningup/rl_intro.html
 * On-policy vs off-policy alghoritms : https://analyticsindiamag.com/reinforcement-learning-policy/
-* REINFORCE with baseline (QAC) from Sutton and Barto, chapter 13 (in progress...)
+* REINFORCE with baseline (QAC) from Sutton and Barto, chapter 13
 * DPPG paper : https://arxiv.org/pdf/1509.02971.pdf 
 * DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/
 
