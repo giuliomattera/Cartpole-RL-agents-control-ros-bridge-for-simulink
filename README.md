@@ -72,7 +72,20 @@ In this case we have 4 networks:
 
 </details>
 
+<details>
+<summary><strong>Remarks on : Robot Operating System and ROS Toolbox</strong></summary>
+ROS stands for Robot Operating System. Even if it says so, ROS is not a real operating system since it goes on top of Linux Ubuntu. ROS is a framework on top of the O.S. that allows it to abstract the hardware from the software. This means you can think in terms of software for all the hardware of the robot. ROS has a communication protocol, principally based on publisher/subscriber (but not only), that allow you to send a message from your software module (one node) to robot controller (another node) using special messages and topics.
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161818837-d60a50a4-85f1-499c-b785-45024f89cfe6.png)
+  
+  ROS Toolbox allow you to exchange messages from differents nodes deployed everywhere (on a HPC SBC, IPC,..) with MATLAB ecosystem. 
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/161819124-17971d79-9402-4597-88c5-6f5f6e90347e.png)
 
+  Once a node is created with python ROS API (rospy) and another one is created with MATLAB (in the same computer, but also in other one) these can communicate using standard messages once topics are defined. In the resource you will find a book and some courses to getting started with ROS.
+
+ </details>
+ 
 ## Technologies
 Project is created with:
 * MATLAB R2021a : ROS Toolbox for MATLAB and Simulink. Simscape Multibody library for kinematic and dynamic model of system
@@ -114,7 +127,11 @@ tensorboard --logdir ./gradient_tape
 * On-policy vs off-policy alghoritms : https://analyticsindiamag.com/reinforcement-learning-policy/
 * REINFORCE with baseline (QAC) from Sutton and Barto, chapter 13
 * DPPG paper : https://arxiv.org/pdf/1509.02971.pdf 
-* DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/
+* DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/4
+* What is ROS? : https://www.theconstructsim.com/what-is-ros/
+* ROS Toolbox : https://it.mathworks.com/products/ros.html
+* Mastering ROS, Cacace, Lentin : https://www.amazon.com/Mastering-ROS-Robotics-Programming-troubleshooting/dp/1801071020
+* ROS for beginners by Anis Koubaa : https://www.udemy.com/course/ros-essentials/
 
 <details>
 <summary><strong>Video examples </strong></summary>
