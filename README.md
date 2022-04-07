@@ -85,13 +85,14 @@ ROS stands for Robot Operating System. Even if it says so, ROS is not a real ope
   Once a node is created with python ROS API (rospy) and another one is created with MATLAB (in the same computer, but also in other one) these can communicate using standard messages once topics are defined. In the resource you will find a book and some courses to getting started with ROS.
 
  </details>
- 
+
 ## Technologies
 Project is created with:
 * MATLAB R2021a : ROS Toolbox for MATLAB and Simulink. Simscape Multibody library for kinematic and dynamic model of system
 * ROS Noetic : std messages (Float32, Float32MultiArray, Bool) and Pub/Subscriber communication
 * Tensorflow 2.4.0 : keras API and gradient tape method for learning
 * TensorFlow Probability 0.12.2
+* OpenAI gym
 
 ## Project sections
 * simulink : you can found all simulink models and matlab node
