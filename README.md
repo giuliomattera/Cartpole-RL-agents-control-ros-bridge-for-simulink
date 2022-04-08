@@ -1,6 +1,6 @@
 # Carte Pole control with RL agents
 
-In this project a REINFORCE with baseline (Q-Actor-Critic) and DDPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agents with the systems' state (Carte Pole) modelled in Simulink (using Multibody Simscape library). 
+In this project a REINFORCE with baseline (Actor-Critic) and DDPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agents with the systems' state (Carte Pole) modelled in Simulink (using Multibody Simscape library). OpenAI gym is used like benchmark to easily discover bugs in agent's code.
 
 <details>
 <summary><strong>Remarks on : Actor-Critic agent with baseline for continous action space</strong></summary>
@@ -100,6 +100,7 @@ Project is created with:
 * bash file : for launching RL agent training with matlab brige. Note that is necessary to configurate the enviroment and agent!
 * model : store of all agents' models
 * checkpoints : store of weights during training. Usefull for fine tuning of controller.
+* benchmarks : folder in which you can found a jupyter notebook with test of agent hyperarameters in gym
 
 ## How launch
 Once ROS Noetic full desktop version is installed and your catkin_ws is created, you can download all files and put they in your src folder. 
@@ -108,7 +109,7 @@ Once ROS Noetic full desktop version is installed and your catkin_ws is created,
 ```
 roscore
 ```
-* Run "DDPG.py" or "QAC.py" from new terminal (rl_connection is the name of folder in our src):
+* Run "DDPG.py" or "AC.py" from new terminal (rl_connection is the name of folder in our src):
 ```
 rosrun rl_connection DDPG.py
 ```
@@ -128,7 +129,7 @@ tensorboard --logdir ./gradient_tape
 
 * Getting started with key concepts of RL : https://spinningup.openai.com/en/latest/spinningup/rl_intro.html
 * On-policy vs off-policy alghoritms : https://analyticsindiamag.com/reinforcement-learning-policy/
-* REINFORCE with baseline (QAC) from Sutton and Barto, chapter 13
+* REINFORCE with baseline (AC) from Sutton and Barto, chapter 13
 * DPPG paper : https://arxiv.org/pdf/1509.02971.pdf 
 * DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/4
 * What is ROS? : https://www.theconstructsim.com/what-is-ros/
