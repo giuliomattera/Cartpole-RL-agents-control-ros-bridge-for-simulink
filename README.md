@@ -100,7 +100,7 @@ Project is created with:
 * bash file : for launching RL agent training with matlab brige. Note that is necessary to configurate the enviroment and agent!
 * model : store of all agents' models
 * checkpoints : store of weights during training. Usefull for fine tuning of controller.
-* benchmarks : folder in which you can found a jupyter notebook with test of agent hyperarameters in gym
+* benchmarks : you can found some jupyter notebooks with test of agents hyperarameters in gym (pendulum env)
 
 ## How launch
 Once ROS Noetic full desktop version is installed and your catkin_ws is created, you can download all files and put they in your src folder. 
