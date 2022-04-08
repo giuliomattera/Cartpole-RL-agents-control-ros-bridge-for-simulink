@@ -138,6 +138,7 @@ tensorboard --logdir ./gradient_tape
 * [ROS Toolbox](https://it.mathworks.com/products/ros.html)
 * [Mastering ROS, Cacace, Lentin](https://www.amazon.com/Mastering-ROS-Robotics-Programming-troubleshooting/dp/1801071020)
 * [ROS for beginners by Anis Koubaa](https://www.udemy.com/course/ros-essentials/)
+* [What is gym?](https://gym.openai.com/)
 
 <details>
 <summary><strong>Video examples </strong></summary>
