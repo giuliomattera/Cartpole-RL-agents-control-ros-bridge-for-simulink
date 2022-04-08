@@ -64,11 +64,13 @@ In this case we have 4 networks:
   
 ![immagine](https://user-images.githubusercontent.com/97847032/161816871-630ae12e-4005-44fb-b003-342a10df0535.png)
  
- Once DDPG is a off-policy algortihms and the policy is **deterministic** (not stochastic like QAC), if the agent were to explore on-policy, in the beginning it would probably not try a wide enough variety of actions to find useful learning signals. To make DDPG policies explore better, we add white noise to their actions at training time.
+ Once DDPG is a off-policy algortihms and the policy is **deterministic** (not stochastic like REINFORCE with baseline), if the agent were to explore on-policy, in the beginning it would probably not try a wide enough variety of actions to find useful learning signals. To make DDPG policies explore better, we add white noise to their actions at training time. In the DDPG paper (see references) an Ornstein-Uhlenbeck process is used.
   
  ![immagine](https://user-images.githubusercontent.com/97847032/161817384-95e84e9e-035b-420d-9ffc-360db622cc6b.png)
 
   ![immagine](https://user-images.githubusercontent.com/97847032/161817856-c267ee10-c504-48a2-9663-cb6657ca038d.png)
+  
+  So, for continuous action signals, it is important to set the noise standard deviation appropriately to encourage exploration. An hint : If your agent converges on local optima too quickly, promote agent exploration by increasing the amount of noise.
 
 </details>
 
@@ -127,24 +129,19 @@ tensorboard --logdir ./gradient_tape
 
 ## Resoruces
 
-* Getting started with key concepts of RL : https://spinningup.openai.com/en/latest/spinningup/rl_intro.html
-* On-policy vs off-policy alghoritms : https://analyticsindiamag.com/reinforcement-learning-policy/
+* [Getting started with key concepts of RL](https://spinningup.openai.com/en/latest/spinningup/rl_intro.html)
+* [On-policy vs off-policy alghoritms](https://analyticsindiamag.com/reinforcement-learning-policy/)
 * REINFORCE with baseline (AC) from Sutton and Barto, chapter 13
-* DPPG paper : https://arxiv.org/pdf/1509.02971.pdf 
-* DPPG implementation : https://keras.io/examples/rl/ddpg_pendulum/4
-* What is ROS? : https://www.theconstructsim.com/what-is-ros/
-* ROS Toolbox : https://it.mathworks.com/products/ros.html
-* Mastering ROS, Cacace, Lentin : https://www.amazon.com/Mastering-ROS-Robotics-Programming-troubleshooting/dp/1801071020
-* ROS for beginners by Anis Koubaa : https://www.udemy.com/course/ros-essentials/
+* [DPPG paper](https://arxiv.org/pdf/1509.02971.pdf)
+* [DPPG implementation](https://keras.io/examples/rl/ddpg_pendulum/4)
+* [What is ROS?](https://www.theconstructsim.com/what-is-ros/)
+* [ROS Toolbox](https://it.mathworks.com/products/ros.html)
+* [Mastering ROS, Cacace, Lentin](https://www.amazon.com/Mastering-ROS-Robotics-Programming-troubleshooting/dp/1801071020)
+* [ROS for beginners by Anis Koubaa](https://www.udemy.com/course/ros-essentials/)
 
 <details>
 <summary><strong>Video examples </strong></summary>
-  
-https://user-images.githubusercontent.com/97847032/158992913-9c8decd3-f4b2-4580-b80f-9d37c355f094.mp4
-
-
-
-https://user-images.githubusercontent.com/97847032/158999496-45d29e59-8d7f-4827-a172-86489c18e255.mp4
+  In progress...
 
 </details>
 
