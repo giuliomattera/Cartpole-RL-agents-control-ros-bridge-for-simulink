@@ -3,6 +3,16 @@
 In this project a REINFORCE with baseline (Actor-Critic) and DDPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agents with the systems' state (Carte Pole) modelled in Simulink (using Multibody Simscape library). OpenAI gym is used like benchmark to easily discover bugs in agent's code.
 
 <details>
+<summary><strong>Remarks on : SARSA agent</strong></summary>
+  Q-Learning technique is an Off Policy technique beacuse uses the greedy approach to learn the Q-value. SARSA technique, on the other hand, is an On Policy and uses the action performed by the current policy to learn the Q-value:
+  
+![immagine](https://user-images.githubusercontent.com/97847032/162726373-a6c2e706-7e56-4cc6-8c3c-132538810160.png)
+  
+  To train the network a gradient descent method is used to reduce the temporal difference error.
+  
+</details>
+  
+<details>
 <summary><strong>Remarks on : Actor-Critic agent with baseline for continous action space</strong></summary>
   
 Unlike many other RL algorithms that parameterize the value functions (Q learning, SARSA, DQN etc.) and derive the policy from the optimal value function using off-policy or on-policy methods (check in resources for details), the **Policy gradient algorithms** use a neural network or a function (to be more general) to estimate directly the policy. To do this the core idea is to maximize the V function, so for use a **gradient ascent** this function must be differentiable, this means that the policy will be a softmax, a gaussian distribution or a neural network (it depends if action space is discrete or continous). REINFORCE is a popular algortihms (check resources for more details) that use the **temporal difference error** coming from Bellamn equation to calculate the gradient:
