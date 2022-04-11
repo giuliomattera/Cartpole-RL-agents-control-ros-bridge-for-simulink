@@ -1,6 +1,6 @@
 # Carte Pole control with RL agents
 
-In this project a REINFORCE with baseline (Actor-Critic) and DDPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agents with the systems' state (Carte Pole) modelled in Simulink (using Multibody Simscape library). OpenAI gym is used like benchmark to easily discover bugs in agent's code.
+In this project a SARSA, REINFORCE with baseline (Actor-Critic) and DDPG agents are created in python with tensorflow library. ROS is used to link the actions of one of the agents with the systems' state (Carte Pole) modelled in Simulink (using Multibody Simscape library). OpenAI gym is used like benchmark to easily discover bugs in agent's code. In particular DDPG and AC are tested on pendulum-v1 env of gym, meanwhile SARSA is tested on CartPole-v1.
 
 <details>
 <summary><strong>Remarks on : SARSA agent</strong></summary>
@@ -121,7 +121,7 @@ Once ROS Noetic full desktop version is installed and your catkin_ws is created,
 ```
 roscore
 ```
-* Run "DDPG.py" or "AC.py" from new terminal (rl_connection is the name of folder in our src):
+* Run "DDPG.py" or "AC.py" or "SARSA.py" from new terminal (rl_connection is the name of folder in our src):
 ```
 rosrun rl_connection DDPG.py
 ```
@@ -141,6 +141,7 @@ tensorboard --logdir ./gradient_tape
 
 * [Getting started with key concepts of RL](https://spinningup.openai.com/en/latest/spinningup/rl_intro.html)
 * [On-policy vs off-policy alghoritms](https://analyticsindiamag.com/reinforcement-learning-policy/)
+* SARSA from Sutton and Barto, chapter 6
 * REINFORCE with baseline (AC) from Sutton and Barto, chapter 13
 * [DPPG paper](https://arxiv.org/pdf/1509.02971.pdf)
 * [DPPG implementation](https://keras.io/examples/rl/ddpg_pendulum/4)
