@@ -8,26 +8,19 @@ if not os.path.exists('./model'):
     os.makedirs('./model')
 
 #Simulation configuration
-MAX_EPISODE = 100
-TIME_STEP = 1e-3
+MAX_EPISODE = 1000
+TS = 1e-3
 
-#Agent configuration
-NUM_STATES = 4
-NUM_ACTIONS = 1
+CLR_DECAY =1//MAX_EPISODE
+ALR_DECAY = 1//MAX_EPISODE
 
-SCALE_EFFORT = 30
-MAX_EFFORT = 30
-
-CRITIC_LR = 6e-4
-ACTOR_LR = 3e-5
-
-CLR_DECAY = 1/MAX_EPISODE
-ALR_DECAY = 1/MAX_EPISODE
-
+# Hyper-parameters
 WARMUP = False
-EPS_WARM = 5
+EPS_WARM = 10
 
-PANDA = True
+#Learning strategies
+PANDA = False
 TRAIN = True
-BATCH_SIZE = 8
+
+TYPE = 'QAC'
 
