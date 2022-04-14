@@ -10,7 +10,11 @@ In this project a SARSA, REINFORCE with baseline (Actor-Critic) and DDPG agents 
   
   To train the network a gradient descent method is used to reduce the temporal difference error.
   
+  ![immagine](https://user-images.githubusercontent.com/97847032/163396027-53889d77-27cc-4333-bc9c-c0db5cc133f2.png)
+
+  
 </details>
+  
   
 <details>
 <summary><strong>Remarks on : Actor-Critic agent with baseline for continous action space</strong></summary>
@@ -35,6 +39,9 @@ But also if the policy gradients methods could be simple to implement, the major
   ![immagine](https://user-images.githubusercontent.com/97847032/161732104-cdcd655b-66b8-4183-b8d9-3f0071b46d50.png)
   
   Now if the action space is discrete, we could use a softmax activation function in the last layer of actor network, otherwise we have to split our actor network in 2 output with dimension equal to n (number of actions) one for predict the mean of a gaussian distribution and another to predict the ln(std) (beacuse it allow us to predict any value) and we will use these 2 parameters to sample an action according with this distribution (this for all sample in the mu-vector and ln(std)-vector output). This is the different between a **categorical policy** and **fiagonal gaussian policy** for a **stochastic policy**
+  
+  ![immagine](https://user-images.githubusercontent.com/97847032/163396126-950e42ea-234d-4cf6-8836-c05832a0daf7.png)
+
 
 </details>
 
