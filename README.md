@@ -40,8 +40,7 @@ But also if the policy gradients methods could be simple to implement, the major
   
   Now if the action space is discrete, we could use a softmax activation function in the last layer of actor network, otherwise we have to split our actor network in 2 output with dimension equal to n (number of actions) one for predict the mean of a gaussian distribution and another to predict the ln(std) (beacuse it allow us to predict any value) and we will use these 2 parameters to sample an action according with this distribution (this for all sample in the mu-vector and ln(std)-vector output). This is the different between a **categorical policy** and **fiagonal gaussian policy** for a **stochastic policy**
   
-  ![immagine](https://user-images.githubusercontent.com/97847032/163396126-950e42ea-234d-4cf6-8836-c05832a0daf7.png)
-
+![immagine](https://user-images.githubusercontent.com/97847032/163396486-45ed582b-42f0-4247-aee2-728549cf1c2e.png)
 
 </details>
 
@@ -119,7 +118,7 @@ Project is created with:
 * bash file : for launching RL agent training with matlab brige. Note that is necessary to configurate the enviroment and agent!
 * model : store of all agents' models
 * checkpoints : store of weights during training. Usefull for fine tuning of controller.
-* benchmarks : you can found some jupyter notebooks with test of agents hyperarameters in gym (pendulum env for DDPG, CartPole for SARSA and AC)
+* benchmarks : you can found some jupyter notebooks with test of agents hyperarameters in gym (pendulum env for DDPG and c-AC, CartPole for SARSA and AC)
 
 ## How launch
 Once ROS Noetic full desktop version is installed and your catkin_ws is created, you can download all files and put they in your src folder. 
