@@ -19,7 +19,7 @@ Unlike many other RL algorithms that parameterize the value functions (Q learnin
   
   ![immagine](https://user-images.githubusercontent.com/97847032/161729301-381c7cdd-380e-44ba-b2a8-96608dc95b01.png)
 
-Where Gt is the comulative discounted reward at each time step, The learning algortihms look like:
+Where Gt is the reward-to-go at each time step, The learning algortihms look like:
   
   ![immagine](https://user-images.githubusercontent.com/97847032/161730201-49d4261c-0836-4496-87c8-6d5fbd618a5b.png)
 
