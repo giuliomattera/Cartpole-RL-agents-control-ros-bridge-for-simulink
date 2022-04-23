@@ -1,6 +1,6 @@
 # Carte Pole control with RL agents
 
-In this project a SARSA, REINFORCE with baseline (Actor-Critic) and DDPG agents are created in python with tensorflow library and are tested in gym with CartPole and Pendulum envs. ROS is used to link the actions of one of the agents (implemented only DDPG, but you can change a little bit the strucutre for use other agents) with the systems' state (Carte Pole) modelled in Simulink (using Multibody Simscape library). OpenAI gym is used like benchmark to easily discover bugs in agent's code. 
+In this project a SARSA (TODO) , REINFORCE with baseline (Actor-Critic) and DDPG agents are created in python with tensorflow library and are tested in gym with CartPole and Pendulum envs. ROS is used to link the actions of one of the agents (implemented only DDPG, but you can change a little bit the strucutre for use other agents) with the systems' state (Carte Pole) modelled in Simulink (using Multibody Simscape library). OpenAI gym is used like benchmark to easily discover bugs in agent's code. 
 
 <details>
 <summary><strong>Remarks on : SARSA agent</strong></summary>
