@@ -127,7 +127,7 @@ Once ROS Noetic full desktop version is installed and your catkin_ws is created,
 ```
 roscore
 ```
-* Run "main.py" from new terminal (rl_connection is the name of folder in our src):
+* Open a terminal inside catkin_ws folder and run "main.py"(rl_connection is the name of folder in our src):
 ```
 rosrun rl_connection main.py
 ```
