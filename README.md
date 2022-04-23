@@ -129,7 +129,7 @@ roscore
 ```
 * Run "main.py" from new terminal (rl_connection is the name of folder in our src):
 ```
-rosrun rl_connection DDPG.py
+rosrun rl_connection main.py
 ```
 * Run "matlab_node.m" from new terminal with launch file or from MATLAB GUI with run button.
 * Alternatively
