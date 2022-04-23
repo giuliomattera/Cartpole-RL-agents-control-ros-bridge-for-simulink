@@ -4,129 +4,117 @@ import rospy
 import tensorflow as tf
 import numpy as np
 import tensorflow_probability as tfp
-from RL_agents import QAC, DDPG
+from RL_agents import utils, Agents
 import config
-import datetime, time
+import datetime
+import time
 from std_msgs.msg import Float32, Float32MultiArray, Bool
+
 
 def send_action(pub, action_msg, action):
     action_msg.data = action
     pub.publish(action_msg)
 
+
 def state_callback(state_msg):
     global s0
     s0 = state_msg.data
 
+
 def reward_callback(reward_msg):
     global r
 
-    r = reward_msg.data
+    r = np.array(reward_msg.data, np.float32)
+
 
 def done_callback(done_msg):
     global done
 
     done = done_msg.data
 
+
 def exp_decay(epoch, ini_value, decay):
 
-   new_value = ini_value * np.exp(-decay*epoch)
+    new_value = ini_value * np.exp(-decay*epoch)
 
-   return new_value
+    return new_value
 
-def communicate(agents, actor_model, publisher, total_trajectory, TYPE):
 
-    global i, step, states, actions, traj, G_t, r, a0, s0, action
+def communicate(agent):
+
+    global i, step, states, actions, G_t, r, a0, s0, action
 
     rospy.Subscriber("state", Float32MultiArray, state_callback)
     rospy.Subscriber("reward", Float32, reward_callback)
     rospy.Subscriber("is_done", Bool, done_callback)
+    
+    s = tf.expand_dims(tf.convert_to_tensor(s0), 0)
 
-    a0 = agents.make_action(actor_model, s0)
-    send_action(publisher, action, a0)
+    a0 = agents.make_action(actor_model, s)
+
+    send_action(pub, action, a0)
 
     if i < 2:
-        #save states and actions at time t
+        # save states and actions at time t
         states.append(s0)
         actions.append(a0)
-        G_t += r*(agents.gamma**step) #update discounted reward for metrics
-        i = i +1
+        i = i + 1
 
     else:
-
-        #fill trajectory with time t,t+1
-        if TYPE == 'DDPG':
-            total_trajectory.append([states[0], actions[0], r, states[1], actions[1]])
-        else:
-            total_trajectory.append([states[0], actions[0], G_t, states[1], actions[1]])
-
+        G_t += r # update total reward for metrics
+        agent.record([states[0], actions[0], r, states[1]])
         states = []
         actions = []
         i = 0
-        step += 1
-    
+    step += 1
+
     rospy.Subscriber("is_done", Bool, done_callback)
+    rospy.sleep(0.1)
+
 
 if __name__ == '__main__':
     try:
+
+        global s0, a0, r, G_t, episode, done, step
         print('[INFO] Global variables initialization...')
 
         total_trajectory, tr = [], []
+        #Using DDPG agent
+        agents = Agents.DDPG(ALR = 1e-3, CLR = 1e-3, TAU = 1e-3, 
+        GAMMA = 0.99, UB = 40, LB = -40, STD = 0.30)
+        agents.num_states = 4
+        agents.num_actions = 1
+        agents.BATCH = 64
+        agents.buffer_capacity = int(1000)
 
-        TYPE = config.TYPE
 
-        if TYPE == 'DDPG':
-            agents = DDPG.DDPG()
-            agents.num_states = 4
-            agents.num_actions = 1
-            agents.max_effort = 30
-            agents.gamma = 0.98
-            agents.std = 0.1
-            agents.ACTOR_LR = 0.001
-            agents.CRITIC_LR = 0.002
-            agents.BATCH = 16
-            models, optimizers = agents.initializer()
-
-        else:
-            agents = QAC.QAC()
-            agents.num_states = 4
-            agents.num_actions = 1
-            agents.max_effort = 2
-            agents.gamma = 0.98
-            agents.std = 0.1
-            agents.ACTOR_LR = 0.001
-            agents.CRITIC_LR = 0.002
-            agents.BATCH = 16
-            models, optimizers = agents.initializer()
+        actor_model, critic_model, target_actor, target_critic, critic_optimizer, actor_optimizer = agents.initialize()
 
         s0 = [0]*agents.num_states
-        a0 = np.array(0, dtype = np.float32)
-        r = np.array(0, dtype = np.float32)
-        G_t = np.array(0, dtype = np.float32)
-        i, j, t, started, avg_rew, episode, step, done = 0 , 0, 0, 0, 0, 0, 0, False
-        states, actions, traj, total_trajectory = [], [], [], []
+        a0 = np.array(0, dtype=np.float32)
+        r = np.array(0, dtype=np.float32)
+        G_t = np.array(0, dtype=np.float32)
+        i, j, episode, step, done = 0, 0, 0, 0, False
+        states, actions = [], []
 
         start = Bool()
         action = Float32()
 
-
         if config.PANDA == True:
             print('[INFO] Panda approach is used for learning. Importing last weights...')
-            models[1].load_weights('./checkpoints/actor')
-            models[0].load_weights('./checkpoints/critic')
-            if TYPE == 'DDPG':
-                models[2].load_weights('./checkpoints/target_actor')
-                models[3].load_weights('./checkpoints/target_critic')
+            actor_model.load_weights('./checkpoints/actor')
+            critic_model.load_weights('./checkpoints/critic')
+            target_actor.load_weights('./checkpoints/target_actor')
+            target_critic.load_weights('./checkpoints/target_critic')
 
         else:
             print('[INFO] Trainig agents for the first time. Initializing agent s weights...')
 
         print('[INFO] Preparing for tensroboard...')
 
-
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         train_log_dir = './gradient_tape/' + current_time
         train_summary_writer = tf.summary.create_file_writer(train_log_dir)
-
 
         print('[INFO] Pushing the agent in the network...')
 
@@ -142,78 +130,90 @@ if __name__ == '__main__':
         start.data = 1
         start_simu.publish(start)
 
-        #Starting simulation with simulink
+        # Starting simulation with simulink
 
         while rospy.is_shutdown() == False or episode < config.MAX_EPISODE:
-            if j == 0: 
+            if j == 0:
                 print('[INFO] Asking for first simulation...')
                 start.data = 1
                 start_simu.publish(start)
                 j = j + 1
-            
+
             rospy.Subscriber("is_done", Bool, done_callback)
             rospy.Subscriber("reward", Float32, reward_callback)
+            rospy.sleep(0.1)
 
-            if done == False and r != 0:
+            if r!= 0 and done == False:
                 while done == False:
-                    communicate(agents, models[1], pub, total_trajectory, TYPE)
+                    communicate(agents)
+                    rospy.Subscriber("is_done", Bool, done_callback)
+                    #rospy.sleep(0.1)
+                    if config.TRAIN == True:
+                        agents.learn(actor_model, critic_model, target_actor, target_critic, 
+                    actor_optimizer, critic_optimizer)
+
+                print('[INFO] Episode {} is finished. In memory there are {} samples. Sending results to tensorboard'.format((episode + 1), 
+                agents.buffer_counter))
+
+                episode += 1
                 
-            else:
-                done = False
-                loss_a, loss_c = [], []
-                t = len(total_trajectory)
-
-                if t != 0 and config.TRAIN == True:
-                    print('[INFO] Simulation is finished. Starting learning from episode ', episode + 1)
-                    avg_rew = agents.train(models, optimizers, total_trajectory)
-
-                    total_trajectory = []
-                    episode = episode + 1
-                    print('[INFO] Sending results to tensorboard...')
-
+                if config.TRAIN == True:
                     with train_summary_writer.as_default():
-                        tf.summary.scalar('Average Reward', avg_rew, step=episode)
-                    
+                        tf.summary.scalar('Comulative avg discounted reward',
+                                        G_t/step, step=episode)
+
                     if episode < config.EPS_WARM and config.WARMUP == True:
-                        optimizers[0].lr = exp_decay(episode, agents.CRITIC_LR,  -config.CLR_DECAY)
-                        optimizers[1].lr = exp_decay(episode, agents.ACTOR_LR,  -config.ALR_DECAY)
+                        critic_optimizer.lr = exp_decay(episode, agents.CRITIC_LR,  -config.CLR_DECAY)
+                        actor_optimizer.lr = exp_decay(episode, agents.ACTOR_LR,  -config.ALR_DECAY)
                     else:
-                        optimizers[0].lr = exp_decay(episode, agents.CRITIC_LR,  config.CLR_DECAY)
-                        optimizers[1].lr = exp_decay(episode, agents.ACTOR_LR,  config.ALR_DECAY)
-                    
+                        critic_optimizer.lr = exp_decay(episode, agents.CRITIC_LR,  config.CLR_DECAY)
+                        actor_optimizer.lr = exp_decay(episode, agents.ACTOR_LR,  config.ALR_DECAY)
+
+                    if episode > config.MAX_EPISODE//2:
+                        agents.STD = agents.STD/2
+                        agents.BATCH = 2*agents.BATCH
+
                     if config.WARMUP == True:
                         if episode > config.EPS_WARM:
-                            print('[INFO] Learning phase is finish. Saving agents weights...')
-                            models[1].save_weights('./checkpoints/actor')
-                            models[0].save_weights('./checkpoints/critic')
+                            print('[INFO] Saving agents weights...')
+                            actor_model.save_weights('./checkpoints/actor')
+                            critic_model.save_weights('./checkpoints/critic')
+                            target_actor.save_weights('./checkpoints/target_actor')
+                            target_critic.save_weights('./checkpoints/target_critic')
                         else:
-                            print('[INFO] Learning finish. Weights are not saved because we are in Warmup phase.')
+                            print('[INFO] Weights are not saved because we are in Warmup phase.')
                     else:
-                        print('[INFO[ Learning phase is finish. Saving agents weights...')
-                        models[1].save_weights('./checkpoints/actor')
-                        models[0].save_weights('./checkpoints/critic')
-                        if episode == config.MAX_EPISODE:
-                            print('[INFO] All episod are finish. Saving entire models...')
-                            if config.TRAIN == True:
-                                models[1].save('./model/actor')
-                                models[0].save('./model/critic')
+                        print('[INFO] Saving agents weights...')
+                        actor_model.save_weights('./checkpoints/actor')
+                        critic_model.save_weights('./checkpoints/critic')
+                        target_actor.save_weights('./checkpoints/target_actor')
+                        target_critic.save_weights('./checkpoints/target_critic')
+                    
+                    if episode == config.MAX_EPISODE:
+                        print('[INFO] All episod are finish. Saving entire models...')
+                        if config.TRAIN == True:
+                            actor_model.save('./model/actor')
+                            critic_model.save('./model/critic')
+                            target_actor.save('./model/target_actor')
+                            target_critic.save('./model/target_critic')
                             break;
-                        print('------- Waiting for a new simulation -------')
-                else: 
-                    start.data = 1
-                    start_simu.publish(start)
-                    if j == 0:
-                        print('------- Waiting for a new simulation -------')
-                
+
+
+                done = False
 
                 s0 = [0]*agents.num_states
-                a0 = np.array(0, dtype = np.float32)
-                r = np.array(0, dtype = np.float32)
-                G_t = np.array(0, dtype = np.float32)
-                avg_rew, step = 0, 0
+                a0 = np.array(0, dtype=np.float32)
+                r = np.array(0, dtype=np.float32)
+                G_t = np.array(0, dtype=np.float32)
+                step = 0
 
                 start.data = 1
                 start_simu.publish(start)
+                print('Asking for a new simulation.')
+            else:
+                start.data = 1
+                start_simu.publish(start)
+                done = False
 
     except rospy.ROSInterruptException:
         pass

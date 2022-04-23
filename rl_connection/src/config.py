@@ -8,19 +8,16 @@ if not os.path.exists('./model'):
     os.makedirs('./model')
 
 #Simulation configuration
-MAX_EPISODE = 1000
+MAX_EPISODE = 500
 TS = 1e-3
 
-CLR_DECAY =1//MAX_EPISODE
-ALR_DECAY = 1//MAX_EPISODE
+CLR_DECAY = 0
+ALR_DECAY = 0
 
 # Hyper-parameters
 WARMUP = False
-EPS_WARM = 10
+EPS_WARM = 5
 
 #Learning strategies
-PANDA = False
-TRAIN = True
-
-TYPE = 'QAC'
-
+PANDA = True
+TRAIN = False
