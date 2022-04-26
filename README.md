@@ -49,7 +49,7 @@ But also if the policy gradients methods could be simple to implement, the major
 <summary><strong>Remarks on : Deep Deterministic Policy Gradient agent</strong></summary>
 In this case we have 4 networks:
   
-* Actor network that predict direcrtly the action istead predict [mu,std] of a gaussian distribution
+* Actor network that predict directly the action instead predict [mu,std] of a Gaussian distribution
 * Target Actor
 * Q network, quite similar to baseline network in AC agent
 * Target Q network
