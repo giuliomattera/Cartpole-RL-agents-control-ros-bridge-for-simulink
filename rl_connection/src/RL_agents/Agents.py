@@ -17,20 +17,19 @@ class DDPG():
         self.BATCH = BATCH
         self.TAU = TAU
         self.buffer_capacity=int(100000)
-
-        self.noise = tfp.distributions.Normal(0, STD)
-
+        self.STD = STD
 
     def getActor(self):
         inputs = tf.keras.layers.Input(shape=(self.num_states,))
         inputs_batch = tf.keras.layers.BatchNormalization()(inputs)
         out = tf.keras.layers.Dense(1024, activation="relu")(inputs_batch)
         out = tf.keras.layers.Dense(1024, activation="relu")(out)
-        outputs = tf.keras.layers.Dense(self.num_actions, activation="tanh",
-        kernel_initializer= tf.random_uniform_initializer(minval=-0.1, maxval = 0.1, seed = 42))(out)
 
-        # Our upper bound is 2.0 for Pendulum.
-        outputs = outputs * self.UPPER_BOUND
+        outputs = tf.keras.layers.Dense(self.num_actions, activation="tanh",
+        kernel_initializer= tf.random_uniform_initializer(minval=-0.05, maxval = 0.05))(out)
+
+        outputs = tf.keras.layers.Lambda(lambda x: x * self.UPPER_BOUND)(outputs)
+
         model = tf.keras.Model(inputs, outputs)
         return model
 
@@ -61,9 +60,9 @@ class DDPG():
 
     def make_action(self, actor_model, state):
 
-        sampled_actions = actor_model(state)
+        sampled_actions = actor_model(state) + tfp.distributions.Normal(0, self.STD).sample()
         # Adding noise to action
-        sampled_actions = sampled_actions.numpy() + self.noise.sample()
+        sampled_actions = sampled_actions.numpy()
 
         legal_action = np.clip(sampled_actions, self.LOWER_BOUND, self.UPPER_BOUND)
 
@@ -165,5 +164,4 @@ class DDPG():
             
             self.update_target(target_actor.variables, actor_model.variables)
             self.update_target(target_critic.variables, critic_model.variables)
-
 
