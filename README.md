@@ -163,12 +163,14 @@ tensorboard --logdir ./gradient_tape
 
 ## Agent during training
 
-https://user-images.githubusercontent.com/97847032/164916064-810d9cec-1018-4509-b9ec-9f875e70797b.mp4
-
-  ## Using agent in control mode after training
 
 
-https://user-images.githubusercontent.com/97847032/164916066-82873cc9-9193-4a0c-89db-bccae9698346.mp4
+
+https://user-images.githubusercontent.com/97847032/166430473-62f48cf8-3e61-4176-8ff8-48b39541abc6.mp4
+
+
+
+
 
 </details>
 
