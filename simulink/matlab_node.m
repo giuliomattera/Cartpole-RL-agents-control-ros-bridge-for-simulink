@@ -1,5 +1,6 @@
-Episode_time = 4;
+Episode_time = 10;
 TS = 1e-3;
+x_limit = 1.5;
 rosinit()
 model = 'simulink_nodes';
 while true
